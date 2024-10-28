@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ArrowRight, Coins, Users, Sun, Moon, MessageCircle, Target, CheckCircle2, Rocket, BarChart2, Shield } from 'lucide-react'
+import Image from 'next/image'
 
 interface Notification {
   id: number;
@@ -64,10 +65,10 @@ function DonationTracker() {
           <div className="relative">
             <p className="text-sm text-muted-foreground">Total Donations</p>
             <p className="text-2xl font-bold">${totalDonations.toFixed(2)}</p>
-            {notifications.map(notification => 
+            {notifications.map(notification =>
               notification.type === 'donation' && (
-                <span 
-                  key={notification.id} 
+                <span
+                  key={notification.id}
                   className="absolute -right-4 -top-4 text-green-500 animate-float-up"
                 >
                   +${notification.amount?.toFixed(2)}
@@ -78,10 +79,10 @@ function DonationTracker() {
           <div className="relative">
             <p className="text-sm text-muted-foreground">Number of Donors</p>
             <p className="text-2xl font-bold">{donorCount}</p>
-            {notifications.map(notification => 
+            {notifications.map(notification =>
               notification.type === 'donor' && (
-                <span 
-                  key={notification.id} 
+                <span
+                  key={notification.id}
                   className="absolute -right-4 -top-4 text-blue-500 animate-float-up"
                 >
                   +1
@@ -91,14 +92,14 @@ function DonationTracker() {
           </div>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-          <div 
-            className="bg-primary h-2.5 rounded-full transition-all duration-500 ease-out" 
-            style={{ width: `${Math.min((totalDonations / 10000) * 100, 100)}%` }}
+          <div
+            className="bg-primary h-2.5 rounded-full transition-all duration-500 ease-out"
+            style={{ width: `${Math.min((totalDonations / 30000) * 100, 100)}%` }}
           ></div>
         </div>
         <p className="text-sm text-muted-foreground mt-2 text-center">
-          {totalDonations < 10000 
-            ? `${(10000 - totalDonations).toFixed(2)} to go to reach our $10,000 goal!`
+          {totalDonations < 30000
+            ? `${(30000 - totalDonations).toFixed(2)} to go to reach our $30,000 goal!`
             : 'Goal reached! Thank you for your support!'}
         </p>
       </CardContent>
@@ -151,7 +152,13 @@ export default function WaitlistPage() {
       <header className="sticky top-0 z-50 w-full bg-white dark:bg-gray-800 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <img src="/placeholder.svg?height=40&width=40" alt="Janka Logo" className="h-10 w-10" />
+            <Image
+              src="/janka-logo.svg"
+              alt="Janka Logo"
+              width={40}
+              height={40}
+              priority
+            />
             <nav className="hidden md:flex space-x-4">
               <a href="/" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Home</a>
               <a href="/explore-market" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Explore Markets</a>
@@ -182,10 +189,10 @@ export default function WaitlistPage() {
                   <div className="grid w-full items-center gap-4">
                     <div className="flex flex-col space-y-1.5">
                       <Label htmlFor="email">Email</Label>
-                      <Input 
-                        id="email" 
-                        placeholder="Enter your email" 
-                        type="email" 
+                      <Input
+                        id="email"
+                        placeholder="Enter your email"
+                        type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
@@ -299,21 +306,21 @@ export default function WaitlistPage() {
                     <div className="grid w-full items-center gap-4">
                       <div className="flex flex-col space-y-1.5">
                         <Label htmlFor="amount">Donation Amount (USD)</Label>
-                        <Input 
-                          id="amount" 
-                          placeholder="Enter amount" 
-                          type="number" 
+                        <Input
+                          id="amount"
+                          placeholder="Enter amount"
+                          type="number"
                           value={donationAmount}
-                          
+
                           onChange={(e) => setDonationAmount(e.target.value)}
                           required
                         />
                       </div>
                       <div className="flex flex-col space-y-1.5">
                         <Label htmlFor="message">Message (Optional)</Label>
-                        <Textarea 
-                          id="message" 
-                          placeholder="Leave a message with your donation" 
+                        <Textarea
+                          id="message"
+                          placeholder="Leave a message with your donation"
                           value={message}
                           onChange={(e) => setMessage(e.target.value)}
                         />

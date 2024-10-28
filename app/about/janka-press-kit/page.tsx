@@ -2,7 +2,8 @@ import React from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Download, FileText, Image, Users } from 'lucide-react'
+import { Download, FileText, Users } from 'lucide-react'
+import Image from 'next/image'
 
 export default function JankaPressKit() {
   const pressReleases = [
@@ -23,7 +24,13 @@ export default function JankaPressKit() {
       <header className="sticky top-0 z-50 w-full bg-white dark:bg-gray-800 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <img src="/placeholder.svg?height=40&width=40" alt="Janka Logo" className="h-10 w-10" />
+            <Image
+              src="/janka-logo.svg"
+              alt="Janka Logo"
+              width={40}
+              height={40}
+              priority
+            />
             <span className="text-xl font-bold">Janka</span>
           </div>
           <Button>Contact Us</Button>
@@ -123,7 +130,7 @@ export default function JankaPressKit() {
                   ))}
                 </ul>
                 <Button className="mt-8 w-full">
-                  <Image className="mr-2 h-4 w-4" /> Download All Assets (ZIP)
+                  <Image className="mr-2 h-4 w-4" src={''} alt={''} /> Download All Assets (ZIP)
                 </Button>
               </CardContent>
             </Card>

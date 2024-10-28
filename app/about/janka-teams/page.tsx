@@ -8,7 +8,7 @@ export default function JankaTeams() {
     {
       name: "Your Name",
       role: "Founder",
-      image: "/placeholder.svg?height=300&width=300",
+      image: "/janka-logo.svg?height=300&width=300",
       bio: "Experienced entrepreneur with a background in cafe management. Passionate about leveraging blockchain technology to revolutionize the insurance industry.",
       social: {
         twitter: "https://twitter.com/founder",
@@ -19,7 +19,7 @@ export default function JankaTeams() {
     {
       name: "Designer Name",
       role: "UI/UX Designer",
-      image: "/placeholder.svg?height=300&width=300",
+      image: "/janka-logo.svg?height=300&width=300",
       bio: "Creative designer with a keen eye for user-centric interfaces. Dedicated to making Janka's platform intuitive and visually appealing.",
       social: {
         twitter: "https://twitter.com/designer",
@@ -29,7 +29,7 @@ export default function JankaTeams() {
     {
       name: "Mentor Name",
       role: "Early Supporter & Mentor",
-      image: "/placeholder.svg?height=300&width=300",
+      image: "/janka-logo.svg?height=300&width=300",
       bio: "Seasoned industry veteran providing invaluable guidance and support to the Janka team. Committed to helping realize the vision of decentralized, event-based insurance.",
       social: {
         linkedin: "https://linkedin.com/in/mentor"
@@ -42,7 +42,7 @@ export default function JankaTeams() {
       <header className="sticky top-0 z-50 w-full bg-white dark:bg-gray-800 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <img src="/placeholder.svg?height=40&width=40" alt="Janka Logo" className="h-10 w-10" />
+            <img src="/janka-logo.svg?height=40&width=40" alt="Janka Logo" className="h-10 w-10" />
             <span className="text-xl font-bold">Janka</span>
           </div>
           <Button>Get Started</Button>

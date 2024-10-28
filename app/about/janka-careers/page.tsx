@@ -4,32 +4,33 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { ArrowRight, Briefcase, Users, Zap, Coffee } from 'lucide-react'
+import Image from 'next/image'
 
 export default function JankaCareers() {
   const jobOpenings = [
-    { 
-      title: "Blockchain Developer", 
+    {
+      title: "Blockchain Developer",
       department: "Engineering",
       location: "Remote",
       type: "Full-time",
       description: "We're looking for an experienced blockchain developer to help build and maintain our Solana-based smart contracts and integrate with Pyth Network oracles."
     },
-    { 
-      title: "Product Manager", 
+    {
+      title: "Product Manager",
       department: "Product",
       location: "Hybrid",
       type: "Full-time",
       description: "Join our product team to help shape the future of decentralized insurance products and drive Janka's product strategy."
     },
-    { 
-      title: "UX/UI Designer", 
+    {
+      title: "UX/UI Designer",
       department: "Design",
       location: "Remote",
       type: "Full-time",
       description: "We're seeking a talented UX/UI designer to create intuitive and engaging user experiences for our web and mobile applications."
     },
-    { 
-      title: "Marketing Specialist", 
+    {
+      title: "Marketing Specialist",
       department: "Marketing",
       location: "On-site",
       type: "Full-time",
@@ -52,7 +53,13 @@ export default function JankaCareers() {
       <header className="sticky top-0 z-50 w-full bg-white dark:bg-gray-800 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <img src="/placeholder.svg?height=40&width=40" alt="Janka Logo" className="h-10 w-10" />
+            <Image
+              src="/janka-logo.svg"
+              alt="Janka Logo"
+              width={40}
+              height={40}
+              priority
+            />
             <span className="text-xl font-bold">Janka</span>
           </div>
           <Button>Apply Now</Button>

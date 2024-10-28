@@ -34,6 +34,7 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts'
 import confetti from 'canvas-confetti'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 // Add this type for the params
 type Props = {
@@ -50,6 +51,13 @@ interface EventDetails {
   maxSupply: number
   currentSupply: number
   expirationDate: string
+}
+
+// ProbabilityVolumes type with dynamic supply caps
+interface ProbabilityVolume {
+  probability: number
+  volume: number
+  cap: number
 }
 
 // Modify the component to accept params
@@ -93,20 +101,24 @@ export default function EnhancedTradePage({ params }: Props) {
     setEventDetails(mockEventDetails)
   }, [id]) // Use unwrapped id in dependency array
 
-  const [probabilityVolumes, setProbabilityVolumes] = useState([
-    { probability: 0.1, volume: 50000 },
-    { probability: 0.3, volume: 75000 },
-    { probability: 0.5, volume: 100000 },
-    { probability: 0.7, volume: 15000 },
-    { probability: 0.9, volume: 10000 },
-  ])
+  // Probability volumes with caps, filtered for probabilities above 10%
+  const initialProbabilityVolumes = [
+    { probability: 0.1, volume: 50000, cap: 10000 },
+    { probability: 0.3, volume: 75000, cap: 15000 },
+    { probability: 0.5, volume: 100000, cap: 20000 },
+    { probability: 0.7, volume: 15000, cap: 50000 },
+    { probability: 0.9, volume: 10000, cap: 200000 },
+  ].filter(item => item.probability >= 0.1)
 
+  const [probabilityVolumes, setProbabilityVolumes] = useState<ProbabilityVolume[]>(initialProbabilityVolumes)
+
+  // Update volumes dynamically
   useEffect(() => {
     const interval = setInterval(() => {
       setProbabilityVolumes(prevVolumes =>
         prevVolumes.map(item => ({
           ...item,
-          volume: Math.max(0, item.volume + Math.floor(Math.random() * 1000) - 500)
+          volume: Math.min(item.cap, Math.max(0, item.volume + Math.floor(Math.random() * 1000) - 500))
         }))
       )
     }, 5000)
@@ -120,8 +132,10 @@ export default function EnhancedTradePage({ params }: Props) {
   }
 
   const calculatePayout = (probability: number) => {
-    return 10 * (1 - probability)
-  }
+    if (probability >= 1) return 0; // No payout for 100% certainty
+    return 1 / probability;
+  };
+  
 
   const confirmPurchase = () => {
     setIsPurchasing(true)
@@ -148,7 +162,13 @@ export default function EnhancedTradePage({ params }: Props) {
       <header className="sticky top-0 z-50 w-full bg-white dark:bg-gray-800 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <img src="/placeholder.svg?height=40&width=40" alt="Janka Logo" className="h-10 w-10" />
+            <Image
+              src="/janka-logo.svg"
+              alt="Janka Logo"
+              width={40}
+              height={40}
+              priority
+            />
             <nav className="hidden md:flex space-x-4">
               <a href="/" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Home</a>
               <a href="/explore-market" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Explore Markets</a>
@@ -211,7 +231,7 @@ export default function EnhancedTradePage({ params }: Props) {
                     </div>
                     <div className="flex justify-between items-center">
                       <span>Potential Payout:</span>
-                      <span className="font-bold">{calculatePayout(selectedProbability).toFixed(2)}x</span>
+                      <span className="font-bold">{calculatePayout(selectedProbability).toFixed(1)}x</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span>Max Supply:</span>
@@ -252,7 +272,7 @@ export default function EnhancedTradePage({ params }: Props) {
                         <div className="flex items-center space-x-2">
                           <Slider
                             id="probability"
-                            min={0}
+                            min={0.1}
                             max={1}
                             step={0.01}
                             value={[selectedProbability]}
@@ -283,8 +303,8 @@ export default function EnhancedTradePage({ params }: Props) {
             <div className="mt-12">
               <Card>
                 <CardHeader>
-                  <CardTitle>Real-Time Probability Volumes</CardTitle>
-                  <CardDescription>Live trading volumes at different probability levels</CardDescription>
+                  <CardTitle>Real-Time Probability Volumes and Caps</CardTitle>
+                  <CardDescription>Live trading volumes at different probability levels, with supply caps</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="h-80 w-full">
@@ -308,6 +328,7 @@ export default function EnhancedTradePage({ params }: Props) {
                       <TableRow>
                         <TableHead>Probability</TableHead>
                         <TableHead>Volume</TableHead>
+                        <TableHead>Cap</TableHead>
                         <TableHead>Payout</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -316,6 +337,7 @@ export default function EnhancedTradePage({ params }: Props) {
                         <TableRow key={item.probability}>
                           <TableCell>{(item.probability * 100).toFixed(0)}%</TableCell>
                           <TableCell>{item.volume.toLocaleString()} contracts</TableCell>
+                          <TableCell>{item.cap.toLocaleString()} contracts</TableCell>
                           <TableCell>{calculatePayout(item.probability).toFixed(2)}x</TableCell>
                         </TableRow>
                       ))}

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowRight, BarChart2, Sun, Moon, Search, Filter, TrendingUp, Droplet, Zap, Thermometer, DollarSign, LockIcon } from 'lucide-react'
+import Image from 'next/image'
 
 export default function ExploreMarketsPage() {
   const [darkMode, setDarkMode] = useState(false)
@@ -27,7 +28,13 @@ export default function ExploreMarketsPage() {
       <header className="sticky top-0 z-50 w-full bg-white dark:bg-gray-800 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <img src="/placeholder.svg?height=40&width=40" alt="Janka Logo" className="h-10 w-10" />
+            <Image
+              src="/janka-logo.svg"
+              alt="Janka Logo"
+              width={40}
+              height={40}
+              priority
+            />
             <nav className="hidden md:flex space-x-4">
               <a href="/" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Home</a>
               <a href="/explore-market" className="text-sm font-medium text-primary">Explore Markets</a>
@@ -141,19 +148,19 @@ export default function ExploreMarketsPage() {
             <div>
               <h4 className="text-lg font-semibold mb-4">About Janka</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="hover:text-gray-300">Our Story</a></li>
-                <li><a href="#" className="hover:text-gray-300">Team</a></li>
-                <li><a href="#" className="hover:text-gray-300">Careers</a></li>
-                <li><a href="#" className="hover:text-gray-300">Press Kit</a></li>
+                <li><a href="/about/janka-story" className="hover:text-gray-300">Our Story</a></li>
+                <li><a href="/about/janka-teams" className="hover:text-gray-300">Team</a></li>
+                <li><a href="/about/janka-careers" className="hover:text-gray-300">Careers</a></li>
+                <li><a href="/about/janka-press-kit" className="hover:text-gray-300">Press Kit</a></li>
               </ul>
             </div>
             <div>
               <h4 className="text-lg font-semibold mb-4">Resources</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="hover:text-gray-300">Documentation</a></li>
-                <li><a href="#" className="hover:text-gray-300">API Reference</a></li>
-                <li><a href="#" className="hover:text-gray-300">Community Forum</a></li>
-                <li><a href="#" className="hover:text-gray-300">Blog</a></li>
+                <li><a href="/resources/documentations" className="hover:text-gray-300">Documentation</a></li>
+                <li><a href="/resources/janka-api-reference" className="hover:text-gray-300">API Reference</a></li>
+                <li><a href="/resources/community-forum" className="hover:text-gray-300">Community Forum</a></li>
+                <li><a href="/resources/janka-blog" className="hover:text-gray-300">Blog</a></li>
               </ul>
             </div>
             <div>

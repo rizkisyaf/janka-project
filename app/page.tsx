@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowRight, BarChart2, Lock, Zap, Sun, Moon, Play, DollarSign, Shield, Briefcase, Check } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 export default function ComprehensiveLandingPage() {
   const [showCookieConsent, setShowCookieConsent] = useState(true)
@@ -39,7 +40,13 @@ export default function ComprehensiveLandingPage() {
       <header className="sticky top-0 z-50 w-full bg-white dark:bg-gray-800 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <img src="/placeholder.svg?height=40&width=40" alt="Janka Logo" className="h-10 w-10" />
+            <Image
+              src="/janka-logo.svg"
+              alt="Janka Logo"
+              width={40}
+              height={40}
+              priority
+            />
             <nav className="hidden md:flex space-x-4">
               <a href="#how-it-works" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">How it Works</a>
               <a href="#features" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Features</a>
@@ -70,11 +77,11 @@ export default function ComprehensiveLandingPage() {
               Hedge Against Real-World Events with Precision and Transparency
             </h1>
             <p className="text-xl mb-8 max-w-2xl mx-auto text-gray-200">
-            Protect your assets against unexpected events. Access objective data, tailored contracts, and automated payouts.
+              Protect your assets against unexpected events. Access objective data, tailored contracts, and automated payouts.
             </p>
             <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 className="bg-primary text-primary-foreground w-full sm:w-auto"
                 onClick={() => router.push('/waitlist')}
               >
@@ -228,8 +235,8 @@ export default function ComprehensiveLandingPage() {
             <p className="text-xl mb-8 max-w-2xl mx-auto">
               Join thousands of users who trust Janka for transparent, decentralized hedging against real-world events.
             </p>
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="bg-primary text-primary-foreground"
               onClick={() => router.push('/waitlist')}
             >
