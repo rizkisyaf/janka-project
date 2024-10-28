@@ -1,13 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowRight, Sun, Moon, Download, Search, Filter, ChevronDown, ArrowUpRight, ArrowDownLeft } from 'lucide-react'
+import { ArrowRight, Sun, Moon, Download, Search, Filter, ChevronDown, ArrowUpRight, ArrowDownLeft, CreditCard, Settings, LogOut, User } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useRouter } from 'next/navigation'
 
 export default function TransactionHistoryPage() {
   const [darkMode, setDarkMode] = useState(false)
@@ -35,6 +36,13 @@ export default function TransactionHistoryPage() {
     { id: 5, date: '2024-03-08', type: 'Hedge', event: 'Renewable Energy Output EU Q4', amount: '-$600', status: 'Pending' },
   ])
 
+  const router = useRouter()
+
+  useEffect(() => {
+    // Ensure this code runs only on the client side
+    if (!router) return
+  }, [router])
+
   return (
     <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
       <header className="sticky top-0 z-50 w-full bg-white dark:bg-gray-800 shadow-sm">
@@ -44,8 +52,6 @@ export default function TransactionHistoryPage() {
             <nav className="hidden md:flex space-x-4">
               <a href="/" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Home</a>
               <a href="/explore-market" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Explore Markets</a>
-              <a href="/manage-events" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Manage Events</a>
-              <a href="/transaction-history" className="text-sm font-medium text-primary">Transaction History</a>
             </nav>
           </div>
           <div className="flex items-center space-x-4">
@@ -60,10 +66,23 @@ export default function TransactionHistoryPage() {
               <DropdownMenuContent className="w-56">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem>Billing</DropdownMenuItem>
-                <DropdownMenuItem>Team</DropdownMenuItem>
-                <DropdownMenuItem>Subscription</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/user-profile')}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  <span>Billing</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -209,9 +228,8 @@ export default function TransactionHistoryPage() {
                           </span>
                         </TableCell>
                         <TableCell>
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            transaction.status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                          }`}>
+                          <span className={`px-2 py-1 rounded-full text-xs ${transaction.status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                            }`}>
                             {transaction.status}
                           </span>
                         </TableCell>
@@ -231,28 +249,28 @@ export default function TransactionHistoryPage() {
             <div>
               <h4 className="text-lg font-semibold mb-4">About Janka</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="hover:text-gray-300">Our Story</a></li>
-                <li><a href="#" className="hover:text-gray-300">Team</a></li>
-                <li><a href="#" className="hover:text-gray-300">Careers</a></li>
-                <li><a href="#" className="hover:text-gray-300">Press Kit</a></li>
+                <li><a href="/about/janka-story" className="hover:text-gray-300">Our Story</a></li>
+                <li><a href="/about/janka-teams" className="hover:text-gray-300">Team</a></li>
+                <li><a href="/about/janka-careers" className="hover:text-gray-300">Careers</a></li>
+                <li><a href="/about/janka-press-kit" className="hover:text-gray-300">Press Kit</a></li>
               </ul>
             </div>
             <div>
               <h4 className="text-lg font-semibold mb-4">Resources</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="hover:text-gray-300">Documentation</a></li>
-                <li><a href="#" className="hover:text-gray-300">API Reference</a></li>
-                <li><a href="#" className="hover:text-gray-300">Community Forum</a></li>
-                <li><a href="#" className="hover:text-gray-300">Blog</a></li>
+                <li><a href="/resources/documentations" className="hover:text-gray-300">Documentation</a></li>
+                <li><a href="/resources/janka-api-reference" className="hover:text-gray-300">API Reference</a></li>
+                <li><a href="/resources/community-forum" className="hover:text-gray-300">Community Forum</a></li>
+                <li><a href="/resources/janka-blog" className="hover:text-gray-300">Blog</a></li>
               </ul>
             </div>
             <div>
               <h4 className="text-lg font-semibold mb-4">Legal</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="hover:text-gray-300">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-gray-300">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-gray-300">Cookie Policy</a></li>
-                <li><a href="#" className="hover:text-gray-300">Compliance</a></li>
+                <li><a href="/legal/janka-privacy-policy" className="hover:text-gray-300">Privacy Policy</a></li>
+                <li><a href="/legal/janka-terms-of-service" className="hover:text-gray-300">Terms of Service</a></li>
+                <li><a href="/legal/janka-cookie-policy" className="hover:text-gray-300">Cookie Policy</a></li>
+                <li><a href="/legal/janka-compliance" className="hover:text-gray-300">Compliance</a></li>
               </ul>
             </div>
             <div>

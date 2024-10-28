@@ -245,19 +245,19 @@ export default function ComprehensiveLandingPage() {
             <div>
               <h4 className="text-lg font-semibold mb-4">About Janka</h4>
               <ul className="space-y-2">
-                <li><a href="/janka-story" className="hover:text-gray-300">Our Story</a></li>
-                <li><a href="/janka-teams" className="hover:text-gray-300">Team</a></li>
-                <li><a href="/janka-careers" className="hover:text-gray-300">Careers</a></li>
-                <li><a href="/janka-press-kit" className="hover:text-gray-300">Press Kit</a></li>
+                <li><a href="/about/janka-story" className="hover:text-gray-300">Our Story</a></li>
+                <li><a href="/about/janka-teams" className="hover:text-gray-300">Team</a></li>
+                <li><a href="/about/janka-careers" className="hover:text-gray-300">Careers</a></li>
+                <li><a href="/about/janka-press-kit" className="hover:text-gray-300">Press Kit</a></li>
               </ul>
             </div>
             <div>
               <h4 className="text-lg font-semibold mb-4">Resources</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="hover:text-gray-300">Documentation</a></li>
-                <li><a href="#" className="hover:text-gray-300">API Reference</a></li>
-                <li><a href="#" className="hover:text-gray-300">Community Forum</a></li>
-                <li><a href="#" className="hover:text-gray-300">Blog</a></li>
+                <li><a href="/resources/documentations" className="hover:text-gray-300">Documentation</a></li>
+                <li><a href="/resources/janka-api-reference" className="hover:text-gray-300">API Reference</a></li>
+                <li><a href="/resources/community-forum" className="hover:text-gray-300">Community Forum</a></li>
+                <li><a href="/resources/janka-blog" className="hover:text-gray-300">Blog</a></li>
               </ul>
             </div>
             <div>

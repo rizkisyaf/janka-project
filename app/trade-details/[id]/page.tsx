@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
-import { ArrowRight, Sun, Moon, ChevronDown, AlertTriangle } from 'lucide-react'
+import { ArrowRight, Sun, Moon, ChevronDown, AlertTriangle, User, CreditCard, Settings, LogOut } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dialog"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts'
 import confetti from 'canvas-confetti'
+import { useRouter } from 'next/navigation'
 
 // Add this type for the params
 type Props = {
@@ -55,7 +56,7 @@ interface EventDetails {
 export default function EnhancedTradePage({ params }: Props) {
   // Unwrap params using React.use()
   const { id } = use(params)
-  
+
   const [darkMode, setDarkMode] = useState(false)
   const [tradeAmount, setTradeAmount] = useState(100)
   const [selectedProbability, setSelectedProbability] = useState(0.5)
@@ -69,6 +70,13 @@ export default function EnhancedTradePage({ params }: Props) {
     currentSupply: 0,
     expirationDate: 'TBD'
   })
+
+  const router = useRouter()
+
+  useEffect(() => {
+    // Ensure this code runs only on the client side
+    if (!router) return
+  }, [router])
 
   // Add useEffect to fetch event details
   useEffect(() => {
@@ -95,7 +103,7 @@ export default function EnhancedTradePage({ params }: Props) {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setProbabilityVolumes(prevVolumes => 
+      setProbabilityVolumes(prevVolumes =>
         prevVolumes.map(item => ({
           ...item,
           volume: Math.max(0, item.volume + Math.floor(Math.random() * 1000) - 500)
@@ -120,11 +128,18 @@ export default function EnhancedTradePage({ params }: Props) {
     setTimeout(() => {
       setIsPurchasing(false)
       setShowPurchaseModal(false)
+
+      // Trigger confetti
       confetti({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 }
       })
+
+      // Delay navigation to allow confetti to finish
+      setTimeout(() => {
+        router.push('/user-dashboard')
+      }, 3000) // Adjust the delay as needed for the confetti duration
     }, 2000)
   }
 
@@ -136,9 +151,7 @@ export default function EnhancedTradePage({ params }: Props) {
             <img src="/placeholder.svg?height=40&width=40" alt="Janka Logo" className="h-10 w-10" />
             <nav className="hidden md:flex space-x-4">
               <a href="/" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Home</a>
-              <a href="/explore-markets" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Explore Markets</a>
-              <a href="/how-it-works" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">How it Works</a>
-              <a href="/trade" className="text-sm font-medium text-primary">Trade</a>
+              <a href="/explore-market" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Explore Markets</a>
             </nav>
           </div>
           <div className="flex items-center space-x-4">
@@ -153,16 +166,29 @@ export default function EnhancedTradePage({ params }: Props) {
               <DropdownMenuContent className="w-56">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem>Billing</DropdownMenuItem>
-                <DropdownMenuItem>Team</DropdownMenuItem>
-                <DropdownMenuItem>Subscription</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/user-profile')}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  <span>Billing</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
       </header>
-      
+
       <main className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
         <section className="py-12 md:py-20">
           <div className="container mx-auto px-4">
@@ -265,12 +291,12 @@ export default function EnhancedTradePage({ params }: Props) {
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={probabilityVolumes}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis 
-                          dataKey="probability" 
+                        <XAxis
+                          dataKey="probability"
                           tickFormatter={(value) => `${(value * 100).toFixed(0)}%`}
                         />
                         <YAxis />
-                        <RechartsTooltip 
+                        <RechartsTooltip
                           formatter={(value, name, props) => [`${value.toLocaleString()} contracts`, `Probability: ${(props.payload.probability * 100).toFixed(0)}%`]}
                         />
                         <Line type="monotone" dataKey="volume" stroke="#8884d8" />
@@ -305,7 +331,7 @@ export default function EnhancedTradePage({ params }: Props) {
           <div className="container mx-auto px-4">
             <h2 className="text-2xl font-bold mb-4">Contract Description</h2>
             <p className="mb-6">{eventDetails.description}</p>
-            
+
             <h2 className="text-2xl font-bold mb-4">Disclaimer and Risks</h2>
             <div className="bg-yellow-100 dark:bg-yellow-900 border-l-4 border-yellow-500 text-yellow-700 dark:text-yellow-200 p-4 mb-6">
               <div className="flex items-center mb-2">
@@ -332,20 +358,20 @@ export default function EnhancedTradePage({ params }: Props) {
             <div>
               <h4 className="text-lg font-semibold mb-4">About Janka</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="hover:text-gray-300">Our Story</a></li>
-                <li><a href="#" className="hover:text-gray-300">Team</a></li>
-                <li><a href="#" className="hover:text-gray-300">Careers</a></li>
-                <li><a href="#" className="hover:text-gray-300">Press Kit</a></li>
+                <li><a href="/about/janka-story" className="hover:text-gray-300">Our Story</a></li>
+                <li><a href="/about/janka-teams" className="hover:text-gray-300">Team</a></li>
+                <li><a href="/about/janka-careers" className="hover:text-gray-300">Careers</a></li>
+                <li><a href="/about/janka-press-kit" className="hover:text-gray-300">Press Kit</a></li>
               </ul>
             </div>
-            
+
             <div>
               <h4 className="text-lg font-semibold mb-4">Resources</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="hover:text-gray-300">Documentation</a></li>
-                <li><a href="#" className="hover:text-gray-300">API Reference</a></li>
-                <li><a href="#" className="hover:text-gray-300">Community Forum</a></li>
-                <li><a href="#" className="hover:text-gray-300">Blog</a></li>
+                <li><a href="/resources/documentations" className="hover:text-gray-300">Documentation</a></li>
+                <li><a href="/resources/janka-api-reference" className="hover:text-gray-300">API Reference</a></li>
+                <li><a href="/resources/community-forum" className="hover:text-gray-300">Community Forum</a></li>
+                <li><a href="/resources/janka-blog" className="hover:text-gray-300">Blog</a></li>
               </ul>
             </div>
             <div>

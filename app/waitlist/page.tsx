@@ -154,8 +154,7 @@ export default function WaitlistPage() {
             <img src="/placeholder.svg?height=40&width=40" alt="Janka Logo" className="h-10 w-10" />
             <nav className="hidden md:flex space-x-4">
               <a href="/" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Home</a>
-              <a href="/explore-markets" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Explore Markets</a>
-              <a href="/how-it-works" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">How it Works</a>
+              <a href="/explore-market" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Explore Markets</a>
             </nav>
           </div>
           <div className="flex items-center space-x-4">
@@ -387,9 +386,9 @@ export default function WaitlistPage() {
             <div>
               <h4 className="text-lg font-semibold mb-4">Resources</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="hover:text-gray-300">Documentation</a></li>
+                <li><a href="/documentations" className="hover:text-gray-300">Documentation</a></li>
                 <li><a href="#" className="hover:text-gray-300">API Reference</a></li>
-                <li><a href="#" className="hover:text-gray-300">Community Forum</a></li>
+                <li><a href="/community-forum" className="hover:text-gray-300">Community Forum</a></li>
                 <li><a href="#" className="hover:text-gray-300">Blog</a></li>
               </ul>
             </div>

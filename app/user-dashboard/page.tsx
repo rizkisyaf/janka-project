@@ -23,56 +23,69 @@ import {
   User, 
   Wallet 
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 export default function UserDashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const router = useRouter()
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen)
 
   return (
     <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
       {/* Sidebar */}
-      <aside className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
-        <div className="flex items-center justify-between h-16 px-4 border-b dark:border-gray-700">
-          <span className="text-2xl font-semibold text-gray-800 dark:text-white">Janka</span>
-          <Button variant="ghost" size="icon" onClick={toggleSidebar} className="lg:hidden">
-            <Menu className="h-6 w-6" />
-          </Button>
+      <aside className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 flex flex-col justify-between`}>
+        <div>
+          <div className="flex items-center justify-between h-16 px-4 border-b dark:border-gray-700">
+            <span className="text-2xl font-semibold text-gray-800 dark:text-white">Janka</span>
+            <Button variant="ghost" size="icon" onClick={toggleSidebar} className="lg:hidden">
+              <Menu className="h-6 w-6" />
+            </Button>
+          </div>
+          <nav className="p-4">
+            <ul className="space-y-2">
+              <li>
+                <Button variant="ghost" className="w-full justify-start">
+                  <Home className="mr-2 h-4 w-4" />
+                  Dashboard
+                </Button>
+              </li>
+              <li>
+                <Button variant="ghost" className="w-full justify-start">
+                  <Package className="mr-2 h-4 w-4" />
+                  My Hedges
+                </Button>
+              </li>
+              <li>
+                <Button variant="ghost" className="w-full justify-start">
+                  <Wallet className="mr-2 h-4 w-4" />
+                  Wallet
+                </Button>
+              </li>
+              <li>
+                <Button variant="ghost" className="w-full justify-start">
+                  <BarChart2 className="mr-2 h-4 w-4" />
+                  Analytics
+                </Button>
+              </li>
+              <li>
+                <Button variant="ghost" className="w-full justify-start">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </Button>
+              </li>
+            </ul>
+          </nav>
         </div>
-        <nav className="p-4">
-          <ul className="space-y-2">
-            <li>
-              <Button variant="ghost" className="w-full justify-start">
-                <Home className="mr-2 h-4 w-4" />
-                Dashboard
-              </Button>
-            </li>
-            <li>
-              <Button variant="ghost" className="w-full justify-start">
-                <Package className="mr-2 h-4 w-4" />
-                My Hedges
-              </Button>
-            </li>
-            <li>
-              <Button variant="ghost" className="w-full justify-start">
-                <Wallet className="mr-2 h-4 w-4" />
-                Wallet
-              </Button>
-            </li>
-            <li>
-              <Button variant="ghost" className="w-full justify-start">
-                <BarChart2 className="mr-2 h-4 w-4" />
-                Analytics
-              </Button>
-            </li>
-            <li>
-              <Button variant="ghost" className="w-full justify-start">
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </Button>
-            </li>
-          </ul>
-        </nav>
+        <div className="p-4 border-t dark:border-gray-700">
+          <button
+            onClick={() => router.push('/user-profile')}
+            className="flex items-center w-full text-left"
+          >
+            <User className="mr-2 h-4 w-4" />
+            <span className="text-sm text-gray-800 dark:text-white">user@example.com</span>
+          </button>
+        </div>
       </aside>
 
       {/* Main content */}
@@ -82,12 +95,9 @@ export default function UserDashboard() {
           <Button variant="ghost" size="icon" onClick={toggleSidebar} className="lg:hidden">
             <Menu className="h-6 w-6" />
           </Button>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 ml-auto">
             <Button variant="ghost" size="icon">
               <Bell className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <User className="h-5 w-5" />
             </Button>
           </div>
         </header>
@@ -216,9 +226,14 @@ export default function UserDashboard() {
                     </ul>
                   </CardContent>
                 </Card>
-                <Button>
-                  Place New Hedge <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+                <div className="flex justify-between">
+                <a href="/manage-events" className="text-blue-500 hover:underline">
+                    Manage Events
+                  </a>
+                  <Button>
+                    Place New Hedge <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
               </TabsContent>
               <TabsContent value="wallet" className="space-y-4">
                 <Card>
@@ -234,8 +249,11 @@ export default function UserDashboard() {
                   </CardContent>
                 </Card>
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="flex justify-between items-center">
                     <CardTitle>Transaction History</CardTitle>
+                    <a href="/transaction-history" className="text-blue-500 hover:underline">
+                      View Details
+                    </a>
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
