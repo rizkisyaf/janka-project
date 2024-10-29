@@ -6,7 +6,7 @@
       "use": "@vercel/node"
     },
     {
-      "src": "janka-project/package.json",
+      "src": "package.json",
       "use": "@vercel/next"
     }
   ],
@@ -17,7 +17,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "janka-project/$1"
+      "dest": "$1"
     }
   ]
 }
