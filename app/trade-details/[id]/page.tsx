@@ -1,118 +1,97 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
-import { ArrowRight, Sun, Moon, ChevronDown, AlertTriangle, User, CreditCard, Settings, LogOut } from 'lucide-react'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { ArrowRight, Sun, Moon, ChevronDown, AlertTriangle, User, CreditCard, Settings, LogOut, Clock } from 'lucide-react'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts'
+import { Progress } from "@/components/ui/progress"
 import confetti from 'canvas-confetti'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 
-// Add this type for the params
-type Props = {
-  params: Promise<{
-    id: string
-  }>
-}
+type ContractType = 'binary' | 'threshold'
 
-// Add eventDetails type
 interface EventDetails {
   id: string
   name: string
   description: string
+  type: ContractType
   maxSupply: number
   currentSupply: number
   expirationDate: string
+  thresholds?: string[]
+  creationDate: string
 }
 
-// ProbabilityVolumes type with dynamic supply caps
 interface ProbabilityVolume {
   probability: number
   volume: number
   cap: number
 }
 
-// Modify the component to accept params
-export default function EnhancedTradePage({ params }: Props) {
-  // Unwrap params using React.use()
-  const { id } = use(params)
+type Props = {
+  params: {
+    id: string
+  }
+}
 
+export default function EnhancedTradePage({ params }: Props) {
+  const { id } = params
   const [darkMode, setDarkMode] = useState(false)
   const [tradeAmount, setTradeAmount] = useState(100)
   const [selectedProbability, setSelectedProbability] = useState(0.5)
+  const [selectedThreshold, setSelectedThreshold] = useState('')
   const [showPurchaseModal, setShowPurchaseModal] = useState(false)
   const [isPurchasing, setIsPurchasing] = useState(false)
   const [eventDetails, setEventDetails] = useState<EventDetails>({
-    id: id, // Use unwrapped id here
-    name: 'Loading...', // Default values
+    id: id,
+    name: 'Loading...',
     description: 'Loading...',
+    type: 'binary',
     maxSupply: 0,
     currentSupply: 0,
-    expirationDate: 'TBD'
+    expirationDate: 'TBD',
+    creationDate: 'TBD'
   })
 
   const router = useRouter()
 
   useEffect(() => {
-    // Ensure this code runs only on the client side
-    if (!router) return
-  }, [router])
-
-  // Add useEffect to fetch event details
-  useEffect(() => {
-    // In production, replace this with actual API call
-    // For now, simulate loading event details
-    const mockEventDetails = {
-      id: id, // Use unwrapped id here
+    // Simulate fetching event details
+    const mockEventDetails: EventDetails = {
+      id: id,
       name: 'US GDP Growth Q3 2024',
-      description: 'This contract pays out if US GDP growth exceeds 2.5% in Q3 2024.',
+      description: 'This contract is based on the US GDP growth rate for the third quarter of 2024.',
+      type: 'binary',
       maxSupply: 1000000,
       currentSupply: 250000,
-      expirationDate: 'September 30, 2024'
+      expirationDate: '2024-09-30T23:59:59Z',
+      creationDate: '2023-10-01T00:00:00Z',
+      thresholds: ['Below 2%', '2% - 4%', 'Above 4%']
     }
     setEventDetails(mockEventDetails)
-  }, [id]) // Use unwrapped id in dependency array
+    if (mockEventDetails.type === 'threshold' && mockEventDetails.thresholds) {
+      setSelectedThreshold(mockEventDetails.thresholds[0])
+    }
+  }, [id])
 
-  // Probability volumes with caps, filtered for probabilities above 10%
-  const initialProbabilityVolumes = [
+  const initialProbabilityVolumes: ProbabilityVolume[] = [
     { probability: 0.1, volume: 50000, cap: 10000 },
     { probability: 0.3, volume: 75000, cap: 15000 },
     { probability: 0.5, volume: 100000, cap: 20000 },
     { probability: 0.7, volume: 15000, cap: 50000 },
     { probability: 0.9, volume: 10000, cap: 200000 },
-  ].filter(item => item.probability >= 0.1)
+  ]
 
   const [probabilityVolumes, setProbabilityVolumes] = useState<ProbabilityVolume[]>(initialProbabilityVolumes)
 
-  // Update volumes dynamically
   useEffect(() => {
     const interval = setInterval(() => {
       setProbabilityVolumes(prevVolumes =>
@@ -126,35 +105,67 @@ export default function EnhancedTradePage({ params }: Props) {
     return () => clearInterval(interval)
   }, [])
 
+  const calculateTimeBasedMultiplier = () => {
+    const now = new Date()
+    const creation = new Date(eventDetails.creationDate)
+    const expiration = new Date(eventDetails.expirationDate)
+    const totalDuration = expiration.getTime() - creation.getTime()
+    const elapsed = now.getTime() - creation.getTime()
+    const progress = Math.max(0, Math.min(1, elapsed / totalDuration))
+    
+    // Exponential increase: starts at 1 and reaches 2 at expiration
+    return 1 + Math.pow(progress, 2)
+  }
+
+  const timeBasedMultiplier = calculateTimeBasedMultiplier()
+
   const handleTrade = (e: React.FormEvent) => {
     e.preventDefault()
     setShowPurchaseModal(true)
   }
 
   const calculatePayout = (probability: number) => {
-    if (probability >= 1) return 0; // No payout for 100% certainty
-    return 1 / probability;
-  };
-  
+    if (eventDetails.type === 'binary') {
+      if (probability >= 1) return 0
+      return 1 / probability
+    } else {
+      // For threshold-based contracts, payout is based on demand
+      // This is a simplified calculation and should be adjusted based on actual market dynamics
+      const totalVolume = probabilityVolumes.reduce((sum, item) => sum + item.volume, 0)
+      const selectedVolume = probabilityVolumes.find(item => item.probability === probability)?.volume || 0
+      return totalVolume / selectedVolume
+    }
+  }
+
+  const calculatePrice = (probability: number) => {
+    const basePrice = eventDetails.type === 'binary' ? probability * 10 : 10
+    return basePrice * timeBasedMultiplier
+  }
 
   const confirmPurchase = () => {
     setIsPurchasing(true)
     setTimeout(() => {
       setIsPurchasing(false)
       setShowPurchaseModal(false)
-
-      // Trigger confetti
       confetti({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 }
       })
-
-      // Delay navigation to allow confetti to finish
       setTimeout(() => {
         router.push('/user-dashboard')
-      }, 3000) // Adjust the delay as needed for the confetti duration
+      }, 3000)
     }, 2000)
+  }
+
+  const getTimeRemainingString = () => {
+    const now = new Date()
+    const expiration = new Date(eventDetails.expirationDate)
+    const timeRemaining = expiration.getTime() - now.getTime()
+    const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24))
+    const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+    const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60))
+    return `${days}d ${hours}h ${minutes}m`
   }
 
   return (
@@ -186,7 +197,7 @@ export default function EnhancedTradePage({ params }: Props) {
               <DropdownMenuContent className="w-56">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push('/user-profile')}>
+                <DropdownMenuItem>
                   <User className="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </DropdownMenuItem>
@@ -214,7 +225,7 @@ export default function EnhancedTradePage({ params }: Props) {
           <div className="container mx-auto px-4">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">Trade: {eventDetails.name}</h1>
             <p className="text-xl mb-12 max-w-3xl text-gray-600 dark:text-gray-400">
-              Purchase contracts based on the probability of this event occurring. Higher probability means lower potential payout.
+              {eventDetails.description}
             </p>
 
             <div className="grid md:grid-cols-2 gap-8">
@@ -226,12 +237,24 @@ export default function EnhancedTradePage({ params }: Props) {
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <span>Current Probability:</span>
-                      <span className="font-bold">{selectedProbability * 100}%</span>
+                      <span>Contract Type:</span>
+                      <span className="font-bold">{eventDetails.type === 'binary' ? 'Binary Probability' : 'Threshold Based'}</span>
                     </div>
+                    {eventDetails.type === 'binary' && (
+                      <div className="flex justify-between items-center">
+                        <span>Current Probability:</span>
+                        <span className="font-bold">{selectedProbability * 100}%</span>
+                      </div>
+                    )}
+                    {eventDetails.type === 'threshold' && (
+                      <div className="flex justify-between items-center">
+                        <span>Selected Threshold:</span>
+                        <span className="font-bold">{selectedThreshold}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between items-center">
                       <span>Potential Payout:</span>
-                      <span className="font-bold">{calculatePayout(selectedProbability).toFixed(1)}x</span>
+                      <span className="font-bold">{calculatePayout(selectedProbability).toFixed(2)}x</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span>Max Supply:</span>
@@ -243,7 +266,18 @@ export default function EnhancedTradePage({ params }: Props) {
                     </div>
                     <div className="flex justify-between items-center">
                       <span>Expiration Date:</span>
-                      <span>{eventDetails.expirationDate}</span>
+                      <span>{new Date(eventDetails.expirationDate).toLocaleDateString()}</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span>Time Remaining:</span>
+                        <span className="font-bold">{getTimeRemainingString()}</span>
+                      </div>
+                      <Progress value={timeBasedMultiplier * 50} className="w-full" />
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Time-based Price Multiplier:</span>
+                      <span className="font-bold">{timeBasedMultiplier.toFixed(2)}x</span>
                     </div>
                   </div>
                 </CardContent>
@@ -267,27 +301,49 @@ export default function EnhancedTradePage({ params }: Props) {
                           min="1"
                         />
                       </div>
-                      <div className="flex flex-col space-y-1.5">
-                        <Label htmlFor="probability">Probability</Label>
-                        <div className="flex items-center space-x-2">
-                          <Slider
-                            id="probability"
-                            min={0.1}
-                            max={1}
-                            step={0.01}
-                            value={[selectedProbability]}
-                            onValueChange={(value) => setSelectedProbability(value[0])}
-                          />
-                          <span className="font-bold">{(selectedProbability * 100).toFixed(0)}%</span>
+                      {eventDetails.type === 'binary' && (
+                        <div className="flex flex-col space-y-1.5">
+                          <Label htmlFor="probability">Probability</Label>
+                          <div className="flex items-center space-x-2">
+                            <Slider
+                              id="probability"
+                              min={0.1}
+                              max={1}
+                              step={0.01}
+                              value={[selectedProbability]}
+                              onValueChange={(value) => setSelectedProbability(value[0])}
+                            />
+                            <span className="font-bold">{(selectedProbability * 100).toFixed(0)}%</span>
+                          </div>
+                        
                         </div>
+                      )}
+                      {eventDetails.type === 'threshold' && (
+                        <div className="flex flex-col space-y-1.5">
+                          <Label htmlFor="threshold">Select Threshold</Label>
+                          <select
+                            id="threshold"
+                            value={selectedThreshold}
+                            onChange={(e) => setSelectedThreshold(e.target.value)}
+                            className="w-full p-2 border rounded"
+                          >
+                            {eventDetails.thresholds?.map((threshold, index) => (
+                              <option key={index} value={threshold}>{threshold}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center">
+                        <span>Base Price per Contract:</span>
+                        <span className="font-bold">${calculatePrice(selectedProbability).toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span>Total Cost:</span>
-                        <span className="font-bold">${(tradeAmount * selectedProbability * 10).toFixed(2)}</span>
+                        <span className="font-bold">${(tradeAmount * calculatePrice(selectedProbability)).toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span>Potential Payout:</span>
-                        <span className="font-bold">${(tradeAmount * 10).toFixed(2)}</span>
+                        <span className="font-bold">${(tradeAmount * calculatePayout(selectedProbability) * 10).toFixed(2)}</span>
                       </div>
                     </div>
                   </form>
@@ -303,8 +359,12 @@ export default function EnhancedTradePage({ params }: Props) {
             <div className="mt-12">
               <Card>
                 <CardHeader>
-                  <CardTitle>Real-Time Probability Volumes and Caps</CardTitle>
-                  <CardDescription>Live trading volumes at different probability levels, with supply caps</CardDescription>
+                  <CardTitle>Market Dynamics</CardTitle>
+                  <CardDescription>
+                    {eventDetails.type === 'binary'
+                      ? 'Probability volumes and supply caps for Binary Probability contracts'
+                      : 'Demand-based pricing for Threshold Based contracts'}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="h-80 w-full">
@@ -326,18 +386,22 @@ export default function EnhancedTradePage({ params }: Props) {
                   <Table className="mt-4">
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Probability</TableHead>
+                        <TableHead>{eventDetails.type === 'binary' ? 'Probability' : 'Threshold'}</TableHead>
                         <TableHead>Volume</TableHead>
-                        <TableHead>Cap</TableHead>
+                        {eventDetails.type === 'binary' && <TableHead>Cap</TableHead>}
+                        <TableHead>Base Price</TableHead>
+                        <TableHead>Current Price</TableHead>
                         <TableHead>Payout</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {probabilityVolumes.map((item) => (
                         <TableRow key={item.probability}>
-                          <TableCell>{(item.probability * 100).toFixed(0)}%</TableCell>
+                          <TableCell>{eventDetails.type === 'binary' ? `${(item.probability * 100).toFixed(0)}%` : eventDetails.thresholds?.[Math.floor(item.probability * eventDetails.thresholds.length)]}</TableCell>
                           <TableCell>{item.volume.toLocaleString()} contracts</TableCell>
-                          <TableCell>{item.cap.toLocaleString()} contracts</TableCell>
+                          {eventDetails.type === 'binary' && <TableCell>{item.cap.toLocaleString()} contracts</TableCell>}
+                          <TableCell>${calculatePrice(item.probability).toFixed(2)}</TableCell>
+                          <TableCell>${(calculatePrice(item.probability) * timeBasedMultiplier).toFixed(2)}</TableCell>
                           <TableCell>{calculatePayout(item.probability).toFixed(2)}x</TableCell>
                         </TableRow>
                       ))}
@@ -367,6 +431,7 @@ export default function EnhancedTradePage({ params }: Props) {
               <li>If the event occurs, contracts purchased at any probability level will pay out $10 per contract.</li>
               <li>If the event does not occur, all contracts will expire worthless.</li>
               <li>The price of contracts may fluctuate based on market demand and new information affecting the likelihood of the event.</li>
+              <li>Contract prices increase as the expiration date approaches, reflecting the time-based pricing model.</li>
               <li>Once purchased, contracts cannot be sold back to Janka, but may be traded with other users on our secondary market.</li>
               <li>Janka does not provide investment advice. All trading decisions are made solely by the user.</li>
             </ul>
@@ -386,7 +451,6 @@ export default function EnhancedTradePage({ params }: Props) {
                 <li><a href="/about/janka-press-kit" className="hover:text-gray-300">Press Kit</a></li>
               </ul>
             </div>
-
             <div>
               <h4 className="text-lg font-semibold mb-4">Resources</h4>
               <ul className="space-y-2">
@@ -452,33 +516,35 @@ export default function EnhancedTradePage({ params }: Props) {
                 <span className="font-semibold">{tradeAmount}</span>
               </div>
               <div className="flex justify-between">
-                <span>Selected Probability:</span>
-                <span className="font-semibold">{(selectedProbability * 100).toFixed(0)}%</span>
+                <span>{eventDetails.type === 'binary' ? 'Selected Probability:' : 'Selected Threshold:'}</span>
+                <span className="font-semibold">
+                  {eventDetails.type === 'binary' 
+                    ? `${(selectedProbability * 100).toFixed(0)}%` 
+                    : selectedThreshold}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Base Price per Contract:</span>
+                <span className="font-semibold">${calculatePrice(selectedProbability).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Time-based Price Multiplier:</span>
+                <span className="font-semibold">{timeBasedMultiplier.toFixed(2)}x</span>
               </div>
               <div className="flex justify-between">
                 <span>Total Cost:</span>
-                <span className="font-semibold">${(tradeAmount * selectedProbability * 10).toFixed(2)}</span>
+                <span className="font-semibold">${(tradeAmount * calculatePrice(selectedProbability) * timeBasedMultiplier).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Potential Payout:</span>
-                <span className="font-semibold">${(tradeAmount * 10).toFixed(2)}</span>
+                <span className="font-semibold">${(tradeAmount * calculatePayout(selectedProbability) * 10).toFixed(2)}</span>
               </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowPurchaseModal(false)}>Cancel</Button>
             <Button onClick={confirmPurchase} disabled={isPurchasing}>
-              {isPurchasing ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Processing...
-                </>
-              ) : (
-                'Confirm Purchase'
-              )}
+              {isPurchasing ? 'Processing...' : 'Confirm Purchase'}
             </Button>
           </DialogFooter>
         </DialogContent>

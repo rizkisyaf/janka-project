@@ -8,12 +8,25 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ArrowRight, Coins, Users, Sun, Moon, MessageCircle, Target, CheckCircle2, Rocket, BarChart2, Shield } from 'lucide-react'
 import Image from 'next/image'
+import { useConnection, useWallet } from '@solana/wallet-adapter-react'
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
+import { PublicKey, Transaction } from '@solana/web3.js'
+import { createTransferInstruction } from '@solana/spl-token'
+import axios from 'axios'
+import { TelegramClient } from 'telegram'
+import { StringSession } from 'telegram/sessions'
 
 interface Notification {
   id: number;
   type: 'donation' | 'donor';
   amount?: number;
 }
+
+const apiId = process.env.TELEGRAM_API_ID
+const apiHash = process.env.TELEGRAM_API_HASH
+const botToken = process.env.TELEGRAM_BOT_TOKEN
+const stringSession = new StringSession('')
+const telegramClient = new TelegramClient(stringSession, Number(apiId), apiHash, { connectionRetries: 5 })
 
 function DonationTracker() {
   const [totalDonations, setTotalDonations] = useState(0)
@@ -22,23 +35,35 @@ function DonationTracker() {
   const [notificationId, setNotificationId] = useState(0)
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      // Simulate new donations (replace with actual API calls in production)
-      const newDonation = Math.random() * 50
-      const newDonor = Math.random() > 0.7
-
-      if (newDonation > 0) {
-        setTotalDonations(prev => prev + newDonation)
-        addNotification('donation', newDonation)
+    // Fetch initial donation data from your backend
+    const fetchDonationData = async () => {
+      try {
+        const response = await axios.get('/api/donations')
+        setTotalDonations(response.data.totalDonations)
+        setDonorCount(response.data.donorCount)
+      } catch (error) {
+        console.error('Error fetching donation data:', error)
       }
+    }
 
-      if (newDonor) {
+    fetchDonationData()
+
+    // Set up real-time updates (e.g., using WebSockets)
+    const socket = new WebSocket('wss://your-backend-url.com/donations')
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data)
+      if (data.type === 'donation') {
+        setTotalDonations(prev => prev + data.amount)
+        addNotification('donation', data.amount)
+      } else if (data.type === 'donor') {
         setDonorCount(prev => prev + 1)
         addNotification('donor')
       }
-    }, 3000)
+    }
 
-    return () => clearInterval(interval)
+    return () => {
+      socket.close()
+    }
   }, [])
 
   const addNotification = (type: 'donation' | 'donor', amount?: number) => {
@@ -112,17 +137,66 @@ export default function WaitlistPage() {
   const [email, setEmail] = useState('')
   const [donationAmount, setDonationAmount] = useState('')
   const [message, setMessage] = useState('')
+  const { connection } = useConnection()
+  const { publicKey, sendTransaction } = useWallet()
 
-  const handleJoinWaitlist = (e: React.FormEvent) => {
+  const handleJoinWaitlist = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle waitlist signup logic here
-    console.log('Joined waitlist:', email)
+    try {
+      const response = await axios.post('/api/waitlist', { email })
+      console.log('Joined waitlist:', response.data)
+      // Add user to newsletter
+      await axios.post('/api/newsletter', { email })
+      alert('You have successfully joined the waitlist and subscribed to our newsletter!')
+    } catch (error) {
+      console.error('Error joining waitlist:', error)
+      alert('There was an error joining the waitlist. Please try again.')
+    }
   }
 
-  const handleDonation = (e: React.FormEvent) => {
+  const handleJoinTelegram = () => {
+    window.open('https://t.me/JankaPublicGroup', '_blank')
+  }
+
+  const handleDonation = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle donation logic here
-    console.log('Donation:', { amount: donationAmount, message })
+    if (!publicKey) {
+      alert('Please connect your wallet first.')
+      return
+    }
+
+    try {
+      // Create a Solana Pay transaction
+      const transaction = new Transaction()
+      const recipientPublicKey = new PublicKey('YOUR_RECIPIENT_WALLET_ADDRESS')
+      const transferInstruction = createTransferInstruction(
+        publicKey,
+        recipientPublicKey,
+        publicKey,
+        BigInt(Math.floor(Number(donationAmount) * 1e9)) // Convert to lamports
+      )
+      transaction.add(transferInstruction)
+
+      // Send the transaction
+      const signature = await sendTransaction(transaction, connection)
+      await connection.confirmTransaction(signature, 'confirmed')
+
+      console.log('Donation successful:', signature)
+
+      // Update donation tracker
+      await axios.post('/api/donations', { amount: Number(donationAmount), message })
+
+      // Send message to Telegram group
+      await telegramClient.connect()
+      await telegramClient.sendMessage('JankaEarlyInvestors', {
+        message: `New donation received: $${donationAmount}\nMessage: ${message || 'No message'}`
+      })
+
+      alert('Thank you for your donation!')
+    } catch (error) {
+      console.error('Error processing donation:', error)
+      alert('There was an error processing your donation. Please try again.')
+    }
   }
 
   return (
@@ -223,7 +297,7 @@ export default function WaitlistPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="mb-4">Connect with the founders and other investors in our exclusive Telegram group. Stay updated on our progress and provide valuable feedback.</p>
-                  <Button className="w-full">
+                  <Button onClick={handleJoinTelegram} className="w-full">
                     Join Telegram Group <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </CardContent>
@@ -305,7 +379,7 @@ export default function WaitlistPage() {
                   <form onSubmit={handleDonation}>
                     <div className="grid w-full items-center gap-4">
                       <div className="flex flex-col space-y-1.5">
-                        <Label htmlFor="amount">Donation Amount (USD)</Label>
+                        <Label htmlFor="amount">Donation Amount (SOL)</Label>
                         <Input
                           id="amount"
                           placeholder="Enter amount"
@@ -328,8 +402,9 @@ export default function WaitlistPage() {
                     </div>
                   </form>
                 </CardContent>
-                <CardFooter>
-                  <Button type="submit" className="w-full">
+                <CardFooter className="flex flex-col space-y-4">
+                  <WalletMultiButton className="w-full" />
+                  <Button type="submit" className="w-full" onClick={handleDonation} disabled={!publicKey}>
                     Donate <Coins className="ml-2 h-4 w-4" />
                   </Button>
                 </CardFooter>

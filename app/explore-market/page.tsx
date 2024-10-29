@@ -9,6 +9,18 @@ import { ArrowRight, BarChart2, Sun, Moon, Search, Filter, TrendingUp, Droplet, 
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 
+type ContractType = 'binary' | 'threshold'
+
+interface Market {
+  id: number
+  name: string
+  category: string
+  type: ContractType
+  probability?: string
+  volume: string
+  thresholds?: string[]
+}
+
 export default function ExploreMarketsPage() {
   const [darkMode, setDarkMode] = useState(false)
   const router = useRouter()
@@ -20,11 +32,11 @@ export default function ExploreMarketsPage() {
     { id: 'energy', name: 'Energy', icon: <Droplet className="h-5 w-5" /> },
   ]
 
-  const featuredMarkets = [
-    { id: 1, name: 'US GDP Growth Q3 2024', category: 'finance', probability: '65%', volume: '$1.2M' },
-    { id: 2, name: 'Hurricane Landfall Florida 2024', category: 'weather', probability: '30%', volume: '$890K' },
-    { id: 3, name: 'Oil Price Above $80/barrel EOY', category: 'commodities', probability: '75%', volume: '$2.5M' },
-    { id: 4, name: 'Renewable Energy Output EU Q4', category: 'energy', probability: '60%', volume: '$1.8M' },
+  const featuredMarkets: Market[] = [
+    { id: 1, name: 'US GDP Growth Q3 2024', category: 'finance', type: 'threshold', volume: '$1.2M', thresholds: ['Below 2%', '2% - 4%', 'Above 4%'] },
+    { id: 2, name: 'Hurricane Landfall Florida 2024', category: 'weather', type: 'binary', probability: '30%', volume: '$890K' },
+    { id: 3, name: 'Oil Price Above $80/barrel EOY', category: 'commodities', type: 'binary', probability: '75%', volume: '$2.5M' },
+    { id: 4, name: 'Renewable Energy Output EU Q4', category: 'energy', type: 'threshold', volume: '$1.8M', thresholds: ['Below 20%', '20% - 30%', 'Above 30%'] },
   ]
 
   return (
@@ -92,17 +104,23 @@ export default function ExploreMarketsPage() {
                       <CardContent>
                         <div className="flex justify-between items-center mb-4">
                           <span className="text-sm text-gray-500 dark:text-gray-400">Category: {market.category}</span>
-                          <span className="text-sm font-semibold text-primary">{market.probability}</span>
+                          <span className="text-sm font-semibold text-primary">
+                            {market.type === 'binary' ? `Probability: ${market.probability}` : 'Threshold Based'}
+                          </span>
                         </div>
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center mb-4">
                           <span className="text-sm text-gray-500 dark:text-gray-400">Volume: {market.volume}</span>
-                          <Button
-                            size="sm"
-                            onClick={() => router.push(`/trade-details/${market.id}`)}
-                          >
-                            Trade <ArrowRight className="ml-2 h-4 w-4" />
-                          </Button>
+                          <span className="text-sm font-semibold text-secondary">
+                            {market.type === 'threshold' && market.thresholds?.join(' | ')}
+                          </span>
                         </div>
+                        <Button
+                          size="sm"
+                          className="w-full"
+                          onClick={() => router.push(`/trade-details/${market.id}`)}
+                        >
+                          Trade <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
                       </CardContent>
                     </Card>
                   ))}
