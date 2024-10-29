@@ -15,6 +15,8 @@ import { createTransferInstruction } from '@solana/spl-token'
 import axios from 'axios'
 import Link from 'next/link'
 import Sparkle from 'react-sparkle'
+import { useDonationQueue } from '@/app/hooks/useDonationQueue'
+import { useDonationTracker } from '../hooks/useDonationTracker'
 
 interface Notification {
   id: number;
@@ -28,6 +30,7 @@ function DonationTracker() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [notificationId, setNotificationId] = useState(0)
   const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected')
+  const { queue, addToQueue, processQueue, isProcessing } = useDonationQueue()
 
   const addNotification = useCallback((type: 'donation' | 'donor', amount?: number) => {
     const newId = notificationId + 1
@@ -40,65 +43,6 @@ function DonationTracker() {
   }, [notificationId])
 
   useEffect(() => {
-    let ws: WebSocket | null = null
-    let reconnectTimeout: NodeJS.Timeout
-    let reconnectAttempts = 0
-    const MAX_RECONNECT_ATTEMPTS = 5
-    const RECONNECT_INTERVAL = 1000 // Start with 1 second
-
-    const connectWebSocket = () => {
-      if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-        console.error('Max reconnection attempts reached')
-        setWsStatus('disconnected')
-        return
-      }
-
-      try {
-        setWsStatus('connecting')
-        ws = new WebSocket('wss://janka-project.vercel.app')
-
-        ws.onopen = () => {
-          console.log('WebSocket Connected')
-          setWsStatus('connected')
-          reconnectAttempts = 0 // Reset attempts on successful connection
-        }
-
-        ws.onclose = () => {
-          console.log('WebSocket Closed')
-          setWsStatus('disconnected')
-          // Exponential backoff for reconnection
-          const timeout = RECONNECT_INTERVAL * Math.pow(2, reconnectAttempts)
-          reconnectTimeout = setTimeout(() => {
-            reconnectAttempts++
-            connectWebSocket()
-          }, timeout)
-        }
-
-        ws.onerror = (error) => {
-          console.error('WebSocket Error:', error)
-        }
-
-        ws.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data)
-            if (data.type === 'donation') {
-              setTotalDonations(prev => prev + data.amount)
-              addNotification('donation', data.amount)
-            } else if (data.type === 'donor') {
-              setDonorCount(prev => prev + 1)
-              addNotification('donor')
-            }
-          } catch (error) {
-            console.error('Error processing message:', error)
-          }
-        }
-      } catch (error) {
-        console.error('WebSocket connection error:', error)
-        setWsStatus('disconnected')
-      }
-    }
-
-    // Initial data fetch
     const fetchDonationData = async () => {
       try {
         const response = await axios.get('https://janka-project.vercel.app/api/donations')
@@ -109,73 +53,42 @@ function DonationTracker() {
       }
     }
 
+    // Initial fetch
     fetchDonationData()
-    connectWebSocket()
 
-    // Cleanup function
-    return () => {
-      if (ws) {
-        ws.close()
-      }
-      if (reconnectTimeout) {
-        clearTimeout(reconnectTimeout)
+    // Poll every 30 seconds
+    const pollInterval = setInterval(fetchDonationData, 30000)
+
+    return () => clearInterval(pollInterval)
+  }, [])
+
+  // Separate WebSocket logic into a custom hook
+  const connectToWebSocket = useCallback(() => {
+    const ws = new WebSocket('wss://janka-project.vercel.app')
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        if (data.type === 'donation') {
+          setTotalDonations(prev => prev + data.amount)
+          addNotification('donation', data.amount)
+        } else if (data.type === 'donor') {
+          setDonorCount(prev => prev + 1)
+          addNotification('donor')
+        }
+      } catch (error) {
+        console.error('Error processing message:', error)
       }
     }
-  }, [addNotification])
 
-  return (
-    <Card className="mb-8">
-      <CardHeader>
-        <CardTitle>Live Donation Tracker</CardTitle>
-        <CardDescription>
-          Watch our community grow in real-time as we work towards our goal.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex justify-between items-center mb-4">
-          <div className="relative">
-            <p className="text-sm text-muted-foreground">Total Donations</p>
-            <p className="text-2xl font-bold">${totalDonations.toFixed(2)}</p>
-            {notifications.map(notification =>
-              notification.type === 'donation' && (
-                <span
-                  key={notification.id}
-                  className="absolute -right-4 -top-4 text-green-500 animate-float-up"
-                >
-                  +${notification.amount?.toFixed(2)}
-                </span>
-              )
-            )}
-          </div>
-          <div className="relative">
-            <p className="text-sm text-muted-foreground">Number of Donors</p>
-            <p className="text-2xl font-bold">{donorCount}</p>
-            {notifications.map(notification =>
-              notification.type === 'donor' && (
-                <span
-                  key={notification.id}
-                  className="absolute -right-4 -top-4 text-blue-500 animate-float-up"
-                >
-                  +1
-                </span>
-              )
-            )}
-          </div>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-          <div
-            className="bg-primary h-2.5 rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${Math.min((totalDonations / 30000) * 100, 100)}%` }}
-          ></div>
-        </div>
-        <p className="text-sm text-muted-foreground mt-2 text-center">
-          {totalDonations < 30000
-            ? `${(30000 - totalDonations).toFixed(2)} to go to reach our $30,000 goal!`
-            : 'Goal reached! Thank you for your support!'}
-        </p>
-      </CardContent>
-    </Card>
-  )
+    return ws
+  }, [addNotification])
+  // Expose the WebSocket connection function
+  return {
+    stats: { totalDonations, donorCount },
+    notifications,
+    connectToWebSocket
+  }
 }
 
 export default function WaitlistPage() {
@@ -212,42 +125,53 @@ export default function WaitlistPage() {
     window.open('https://t.me/+mrbJewOGK_ZiOTI1', '_blank')
   }
 
+  // Move DonationTracker logic to a custom hook
+  const {
+    totalDonations,
+    donorCount,
+    notifications,
+    connectToWebSocket
+  } = useDonationTracker()
+
   const handleDonation = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (!publicKey) {
-      alert('Please connect your wallet first.');
-      return;
+      alert('Please connect your wallet first.')
+      return
     }
 
+    let ws: WebSocket | null = null
     try {
-      // Process the donation transaction on Solana
-      const transaction = new Transaction();
-      const recipientPublicKey = new PublicKey('4TSJPLqvzfejeh2fPdXnUs8sFnfSQ2qSs2N4WYzA9usK');
+      ws = connectToWebSocket()
+
+      const transaction = new Transaction()
+      const recipientPublicKey = new PublicKey('4TSJPLqvzfejeh2fPdXnUs8sFnfSQ2qSs2N4WYzA9usK')
       const transferInstruction = createTransferInstruction(
         publicKey,
         recipientPublicKey,
         publicKey,
         BigInt(Math.floor(Number(donationAmount) * 1e9))
-      );
-      transaction.add(transferInstruction);
+      )
+      transaction.add(transferInstruction)
 
-      const signature = await sendTransaction(transaction, connection);
-      await connection.confirmTransaction(signature, 'confirmed');
-      console.log('Donation successful:', signature);
+      const signature = await sendTransaction(transaction, connection)
+      await connection.confirmTransaction(signature, 'confirmed')
 
-      // Send donation data to the backend server
       await axios.post('https://janka-project.vercel.app/api/donations', {
         amount: Number(donationAmount),
         message
-      });
+      })
 
-      alert('Thank you for your donation!');
+      if (ws) {
+        setTimeout(() => ws?.close(), 5000)
+      }
+
+      alert('Thank you for your donation!')
     } catch (error) {
-      console.error('Error processing donation:', error);
-      alert('There was an error processing your donation. Please try again.');
+      console.error('Error processing donation:', error)
+      alert('There was an error processing your donation. Please try again.')
     }
-  };
-
+  }
 
   return (
     <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
@@ -432,7 +356,6 @@ export default function WaitlistPage() {
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-12">Support Janka&apos;s Development</h2>
             <div className="max-w-3xl mx-auto">
-              <DonationTracker />
               <Card>
                 <CardHeader>
                   <CardTitle>Donate to Our Independent Project</CardTitle>
