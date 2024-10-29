@@ -30,13 +30,38 @@ export default function ComprehensiveLandingPage() {
       document.documentElement.classList.remove('dark')
     }
   }, [darkMode])
+
+  useEffect(() => {
+    const savedConsent = localStorage.getItem('cookieConsent')
+    if (savedConsent) {
+      setShowCookieConsent(false)
+      setCookiePreferences(JSON.parse(savedConsent))
+    }
+  }, [])
+
   const handleCookiePreferenceChange = (type: 'essential' | 'performance' | 'functional') => {
-    setCookiePreferences(prev => ({ ...prev, [type]: !prev[type] }))
+    const newPreferences = { 
+      ...cookiePreferences, 
+      [type]: !cookiePreferences[type] 
+    }
+    setCookiePreferences(newPreferences)
+    localStorage.setItem('cookieConsent', JSON.stringify(newPreferences))
   }
 
   const acceptAllCookies = () => {
-    setCookiePreferences({ essential: true, performance: true, functional: true })
+    const allAccepted = { 
+      essential: true, 
+      performance: true, 
+      functional: true 
+    }
+    setCookiePreferences(allAccepted)
     setShowCookieConsent(false)
+    localStorage.setItem('cookieConsent', JSON.stringify(allAccepted))
+  }
+
+  const savePreferences = () => {
+    setShowCookieConsent(false)
+    localStorage.setItem('cookieConsent', JSON.stringify(cookiePreferences))
   }
 
   const handleFooterSubscribe = async (e: React.FormEvent) => {
@@ -419,7 +444,7 @@ export default function ComprehensiveLandingPage() {
                 </div>
               </div>
               <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setShowCookieConsent(false)}>Save Preferences</Button>
+                <Button variant="outline" onClick={savePreferences}>Save Preferences</Button>
                 <Button onClick={acceptAllCookies}>Accept All</Button>
               </div>
               <div className="text-sm text-gray-500">
