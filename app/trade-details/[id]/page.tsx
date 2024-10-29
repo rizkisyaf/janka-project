@@ -37,14 +37,12 @@ interface ProbabilityVolume {
   cap: number
 }
 
-type Props = {
-  params: {
-    id: string
-  }
-  searchParams?: { [key: string]: string | string[] | undefined }
+interface PageProps {
+  params: { id: string }
+  searchParams?: Record<string, string | string[] | undefined>
 }
 
-export default function EnhancedTradePage({ params }: Props) {
+export default function EnhancedTradePage({ params }: PageProps) {
   const { id } = params
   const [darkMode, setDarkMode] = useState(false)
   const [tradeAmount, setTradeAmount] = useState(100)
