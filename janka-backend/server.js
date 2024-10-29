@@ -324,8 +324,6 @@ const options = {
   socketTimeoutMS: 45000,
   family: 4, // Use IPv4, skip trying IPv6
   authSource: 'janka-admin',
-  // If you're using MongoDB Atlas App Services
-  useAppServices: true,
 };
 
 mongoose.connect(process.env.MONGODB_URI, {
@@ -347,3 +345,5 @@ mongoose.connection.on('error', (err) => {
 mongoose.connection.on('disconnected', () => {
   console.log('Mongoose disconnected');
 });
+
+module.exports = app;
