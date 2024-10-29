@@ -20,11 +20,12 @@ import {
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
+import axios from 'axios'
 
 export default function CommunityForumPage() {
     const [darkMode, setDarkMode] = useState(false)
     const router = useRouter()
-
+    const [footerEmail, setFooterEmail] = useState('')
     useEffect(() => {
         // Ensure this code runs only on the client side
         if (!router) return
@@ -43,6 +44,25 @@ export default function CommunityForumPage() {
         { title: "Janka mobile app not loading", author: "NewTrader", replies: 12, views: 234, likes: 5, category: "Platform Support" },
         { title: "Introducing myself to the community", author: "JankaNewbie", replies: 8, views: 123, likes: 10, category: "General Discussion" },
     ]
+
+    const handleFooterSubscribe = async (e: React.FormEvent) => {
+        e.preventDefault()
+        try {
+          if (!footerEmail || !footerEmail.includes('@')) {
+            alert('Please enter a valid email address')
+            return
+          }
+    
+          const response = await axios.post('/api/newsletter', { email: footerEmail })
+          if (response.data.success) {
+            alert('Thank you for subscribing to our newsletter!')
+            setFooterEmail('')
+          }
+        } catch (error) {
+          console.error('Error subscribing to newsletter:', error)
+            alert('There was an error subscribing to the newsletter. Please try again.')
+        }
+    }
 
     return (
         <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
@@ -300,9 +320,20 @@ export default function CommunityForumPage() {
                                 </Link>
                             </div>
                             <p className="text-sm">Stay updated with our newsletter</p>
-                            <form className="mt-2 flex">
-                                <Input type="email" placeholder="Enter your email" className="bg-gray-700 text-white rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary" />
-                                <Button type="submit" className="bg-primary text-primary-foreground rounded-l-none">Subscribe</Button>
+                            <form onSubmit={handleFooterSubscribe} className="mt-2 flex">
+                                <Input
+                                    type="email"
+                                    value={footerEmail}
+                                    onChange={(e) => setFooterEmail(e.target.value)}
+                                    placeholder="Enter your email"
+                                    className="bg-gray-700 text-white rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                                <Button
+                                    type="submit"
+                                    className="bg-primary text-primary-foreground rounded-l-none"
+                                >
+                                    Subscribe
+                                </Button>
                             </form>
                         </div>
                     </div>

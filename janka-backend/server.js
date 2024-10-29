@@ -6,6 +6,8 @@ const path = require('path');
 const { Telegraf } = require('telegraf');
 const WebSocket = require('ws');
 const fs = require('fs');
+const validator = require('validator');
+const nodemailer = require('nodemailer');
 
 dotenv.config();
 
@@ -91,19 +93,58 @@ wss.on('connection', (ws) => {
   });
 });
 
-// Routes
+// Email transporter setup
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
+});
+
+// @ts-ignore
 app.post('/api/waitlist', async (req, res) => {
   try {
     const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+
+    // Validate email
+    if (!validator.isEmail(email)) {
+      return res.status(400).json({ message: 'Invalid email format' });
+    }
+
+    // Check for existing email
+    const existingUser = await Waitlist.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email already exists in the waitlist' });
+    }
+
+    // Save to database
     const waitlistEntry = new Waitlist({ email });
     await waitlistEntry.save();
+
+    // Send confirmation email
+    await transporter.sendMail({
+      from: process.env.SMTP_USER,
+      to: email,
+      subject: 'Welcome to Janka Waitlist!',
+      html: `
+        <h1>Welcome to Janka!</h1>
+        <p>Thank you for joining our waitlist. We're excited to have you on board!</p>
+        <p>We'll keep you updated on our progress and let you know when we launch.</p>
+        <br>
+        <p>Best regards,</p>
+        <p>The Janka Team</p>
+      `
+    });
+
     res.status(201).json({ message: 'Successfully joined the waitlist' });
   } catch (error) {
-    if (error.code === 11000) {
-      res.status(400).json({ message: 'Email already exists in the waitlist' });
-    } else {
-      res.status(500).json({ message: 'Error joining waitlist', error: error.message });
-    }
+    console.error('Waitlist error:', error);
+    return res.status(500).json({ success: false, message: 'Error joining waitlist' });
   }
 });
 

@@ -29,9 +29,11 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link';
+import axios from 'axios'
 
 export default function ManageEventsPage() {
   const [darkMode, setDarkMode] = useState(false)
+  const [footerEmail, setFooterEmail] = useState('')
   const [events, setEvents] = useState([
     { id: 1, name: 'US GDP Growth Q3 2024', category: 'Finance', probability: '65%', stake: '$500', status: 'Active' },
     { id: 2, name: 'Hurricane Landfall Florida 2024', category: 'Weather', probability: '30%', stake: '$750', status: 'Pending' },
@@ -57,6 +59,25 @@ export default function ManageEventsPage() {
 
   const handleDeleteEvent = (id: number) => {
     // Handle event deletion logic here
+  }
+
+  const handleFooterSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      if (!footerEmail || !footerEmail.includes('@')) {
+        alert('Please enter a valid email address')
+        return
+      }
+
+      const response = await axios.post('/api/newsletter', { email: footerEmail })
+      if (response.data.success) {
+        alert('Thank you for subscribing to our newsletter!')
+        setFooterEmail('')
+      }
+    } catch (error) {
+      console.error('Error subscribing to newsletter:', error)
+      alert('There was an error subscribing to the newsletter. Please try again.')
+    }
   }
 
   return (
@@ -419,9 +440,20 @@ export default function ManageEventsPage() {
                 </Link>
               </div>
               <p className="text-sm">Stay updated with our newsletter</p>
-              <form className="mt-2 flex">
-                <Input type="email" placeholder="Enter your email" className="bg-gray-700 text-white rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary" />
-                <Button type="submit" className="bg-primary text-primary-foreground rounded-l-none">Subscribe</Button>
+              <form onSubmit={handleFooterSubscribe} className="mt-2 flex">
+                <Input
+                  type="email"
+                  value={footerEmail}
+                  onChange={(e) => setFooterEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="bg-gray-700 text-white rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <Button
+                  type="submit"
+                  className="bg-primary text-primary-foreground rounded-l-none"
+                >
+                  Subscribe
+                </Button>
               </form>
             </div>
           </div>

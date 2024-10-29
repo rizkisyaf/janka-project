@@ -9,6 +9,7 @@ import { ArrowRight, BarChart2, Sun, Moon, Search, Filter, TrendingUp, Droplet, 
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
+import axios from 'axios'
 
 type ContractType = 'binary' | 'threshold'
 
@@ -25,7 +26,7 @@ interface Market {
 export default function ExploreMarketsPage() {
   const [darkMode, setDarkMode] = useState(false)
   const router = useRouter()
-
+  const [footerEmail, setFooterEmail] = useState('')
   const marketCategories = [
     { id: 'weather', name: 'Weather', icon: <Thermometer className="h-5 w-5" /> },
     { id: 'finance', name: 'Finance', icon: <TrendingUp className="h-5 w-5" /> },
@@ -39,6 +40,25 @@ export default function ExploreMarketsPage() {
     { id: '3', name: 'Oil Price Above $80/barrel EOY', category: 'commodities', type: 'binary', probability: '75%', volume: '$2.5M' },
     { id: '4', name: 'Renewable Energy Output EU Q4', category: 'energy', type: 'threshold', volume: '$1.8M', thresholds: ['Below 20%', '20% - 30%', 'Above 30%'] },
   ]
+
+  const handleFooterSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      if (!footerEmail || !footerEmail.includes('@')) {
+        alert('Please enter a valid email address')
+        return
+      }
+
+      const response = await axios.post('/api/newsletter', { email: footerEmail })
+      if (response.data.success) {
+        alert('Thank you for subscribing to our newsletter!')
+        setFooterEmail('')
+      }
+    } catch (error) {
+      console.error('Error subscribing to newsletter:', error)
+      alert('There was an error subscribing to the newsletter. Please try again.')
+    }
+  }
 
   return (
     <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
@@ -274,9 +294,20 @@ export default function ExploreMarketsPage() {
                 </Link>
               </div>
               <p className="text-sm">Stay updated with our newsletter</p>
-              <form className="mt-2 flex">
-                <Input type="email" placeholder="Enter your email" className="bg-gray-700 text-white rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary" />
-                <Button type="submit" className="bg-primary text-primary-foreground rounded-l-none">Subscribe</Button>
+              <form onSubmit={handleFooterSubscribe} className="mt-2 flex">
+                <Input
+                  type="email"
+                  value={footerEmail}
+                  onChange={(e) => setFooterEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="bg-gray-700 text-white rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <Button
+                  type="submit"
+                  className="bg-primary text-primary-foreground rounded-l-none"
+                >
+                  Subscribe
+                </Button>
               </form>
             </div>
           </div>

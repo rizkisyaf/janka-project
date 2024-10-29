@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Input } from '@/components/ui/input'
+import axios from 'axios'
 
 export default function ComprehensiveLandingPage() {
   const [showCookieConsent, setShowCookieConsent] = useState(true)
@@ -20,6 +21,7 @@ export default function ComprehensiveLandingPage() {
   })
   const [darkMode, setDarkMode] = useState(false)
   const router = useRouter()
+  const [footerEmail, setFooterEmail] = useState('')
 
   useEffect(() => {
     if (darkMode) {
@@ -35,6 +37,25 @@ export default function ComprehensiveLandingPage() {
   const acceptAllCookies = () => {
     setCookiePreferences({ essential: true, performance: true, functional: true })
     setShowCookieConsent(false)
+  }
+
+  const handleFooterSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      if (!footerEmail || !footerEmail.includes('@')) {
+        alert('Please enter a valid email address')
+        return
+      }
+
+      const response = await axios.post('/api/newsletter', { email: footerEmail })
+      if (response.data.success) {
+        alert('Thank you for subscribing to our newsletter!')
+        setFooterEmail('')
+      }
+    } catch (error) {
+      console.error('Error subscribing to newsletter:', error)
+      alert('There was an error subscribing to the newsletter. Please try again.')
+    }
   }
 
   return (
@@ -352,9 +373,20 @@ export default function ComprehensiveLandingPage() {
                 </Link>
               </div>
               <p className="text-sm">Stay updated with our newsletter</p>
-              <form className="mt-2 flex">
-                <Input type="email" placeholder="Enter your email" className="bg-gray-700 text-white rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary" />
-                <Button type="submit" className="bg-primary text-primary-foreground rounded-l-none">Subscribe</Button>
+              <form onSubmit={handleFooterSubscribe} className="mt-2 flex">
+                <Input
+                  type="email"
+                  value={footerEmail}
+                  onChange={(e) => setFooterEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="bg-gray-700 text-white rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <Button
+                  type="submit"
+                  className="bg-primary text-primary-foreground rounded-l-none"
+                >
+                  Subscribe
+                </Button>
               </form>
             </div>
           </div>
