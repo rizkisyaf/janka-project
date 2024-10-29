@@ -37,12 +37,11 @@ interface ProbabilityVolume {
   cap: number
 }
 
-interface Props {
+export default function EnhancedTradePage({
+  params,
+}: {
   params: { id: string }
-  searchParams?: { [key: string]: string | string[] | undefined }
-}
-
-export default function EnhancedTradePage({ params }: Props) {
+}) {
   const { id } = params
   const [darkMode, setDarkMode] = useState(false)
   const [tradeAmount, setTradeAmount] = useState(100)
@@ -112,7 +111,7 @@ export default function EnhancedTradePage({ params }: Props) {
     const totalDuration = expiration.getTime() - creation.getTime()
     const elapsed = now.getTime() - creation.getTime()
     const progress = Math.max(0, Math.min(1, elapsed / totalDuration))
-    
+
     // Exponential increase: starts at 1 and reaches 2 at expiration
     return 1 + Math.pow(progress, 2)
   }
@@ -319,7 +318,7 @@ export default function EnhancedTradePage({ params }: Props) {
                             />
                             <span className="font-bold">{(selectedProbability * 100).toFixed(0)}%</span>
                           </div>
-                        
+
                         </div>
                       )}
                       {eventDetails.type === 'threshold' && (
@@ -576,8 +575,8 @@ export default function EnhancedTradePage({ params }: Props) {
               <div className="flex justify-between">
                 <span>{eventDetails.type === 'binary' ? 'Selected Probability:' : 'Selected Threshold:'}</span>
                 <span className="font-semibold">
-                  {eventDetails.type === 'binary' 
-                    ? `${(selectedProbability * 100).toFixed(0)}%` 
+                  {eventDetails.type === 'binary'
+                    ? `${(selectedProbability * 100).toFixed(0)}%`
                     : selectedThreshold}
                 </span>
               </div>
