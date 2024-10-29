@@ -14,6 +14,7 @@ import { PublicKey, Transaction } from '@solana/web3.js'
 import { createTransferInstruction } from '@solana/spl-token'
 import axios from 'axios'
 import Link from 'next/link'
+import Sparkle from 'react-sparkle'
 
 interface Notification {
   id: number;
@@ -41,7 +42,7 @@ function DonationTracker() {
   useEffect(() => {
     const fetchDonationData = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/donations');
+        const response = await axios.get('http://janka-project.vercel.app/api/donations');
         setTotalDonations(response.data.totalDonations);
         setDonorCount(response.data.donorCount);
       } catch (error) {
@@ -51,7 +52,7 @@ function DonationTracker() {
 
     fetchDonationData();
 
-    const ws = new WebSocket('ws://localhost:3000');
+    const ws = new WebSocket('ws://janka-project.vercel.app');
 
     ws.onopen = () => {
       console.log('WebSocket Connected');
@@ -135,15 +136,23 @@ export default function WaitlistPage() {
   const [message, setMessage] = useState('')
   const { connection } = useConnection()
   const { publicKey, sendTransaction } = useWallet()
+  const [showSparkle, setShowSparkle] = useState(false)
 
   const handleJoinWaitlist = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
       const response = await axios.post('/api/waitlist', { email })
       console.log('Joined waitlist:', response.data)
-      // Add user to newsletter
       await axios.post('/api/newsletter', { email })
+
+      // Show sparkle animation
+      setShowSparkle(true)
       alert('You have successfully joined the waitlist and subscribed to our newsletter!')
+
+      // Optional: Hide sparkle after 5 seconds
+      setTimeout(() => {
+        setShowSparkle(false)
+      }, 5000)
     } catch (error) {
       console.error('Error joining waitlist:', error)
       alert('There was an error joining the waitlist. Please try again.')
@@ -178,7 +187,7 @@ export default function WaitlistPage() {
       console.log('Donation successful:', signature);
 
       // Send donation data to the backend server
-      await axios.post('http://localhost:3000/api/donations', {
+      await axios.post('http://janka-project.vercel.app/api/donations', {
         amount: Number(donationAmount),
         message
       });
@@ -249,7 +258,18 @@ export default function WaitlistPage() {
             <p className="text-xl mb-12 max-w-3xl mx-auto text-gray-600 dark:text-gray-400">
               Be part of the future of decentralized hedging. Your support is crucial for demonstrating public demand and securing regulatory approval.
             </p>
-            <Card className="max-w-md mx-auto">
+            <Card className="max-w-md mx-auto relative">
+              {showSparkle && (
+                <Sparkle
+                  color="gold"
+                  fadeOutSpeed={10}
+                  count={30}
+                  flicker={false}
+                  minSize={5}
+                  maxSize={12}
+                  overflowPx={20}
+                />
+              )}
               <CardHeader>
                 <CardTitle>Sign Up for Early Access</CardTitle>
                 <CardDescription>Join our waitlist to be notified when we launch</CardDescription>
@@ -269,13 +289,13 @@ export default function WaitlistPage() {
                       />
                     </div>
                   </div>
+                  <CardFooter className="px-0 pb-0">
+                    <Button type="submit" className="w-full">
+                      Join Waitlist <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </CardFooter>
                 </form>
               </CardContent>
-              <CardFooter>
-                <Button type="submit" className="w-full">
-                  Join Waitlist <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </CardFooter>
             </Card>
           </div>
         </section>
