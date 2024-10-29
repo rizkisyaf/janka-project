@@ -122,6 +122,58 @@ export default function WaitlistPage() {
     }
   }
 
+  const handleJoinTelegram = () => {
+    window.open('https://t.me/+mrbJewOGK_ZiOTI1', '_blank')
+  }
+
+  // Move DonationTracker logic to a custom hook
+  const {
+    totalDonations,
+    donorCount,
+    notifications,
+    connectToWebSocket
+  } = useDonationTracker()
+
+  const handleDonation = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!publicKey) {
+      alert('Please connect your wallet first.')
+      return
+    }
+
+    let ws: WebSocket | null = null
+    try {
+      ws = connectToWebSocket()
+
+      const transaction = new Transaction()
+      const recipientPublicKey = new PublicKey('4TSJPLqvzfejeh2fPdXnUs8sFnfSQ2qSs2N4WYzA9usK')
+      const transferInstruction = createTransferInstruction(
+        publicKey,
+        recipientPublicKey,
+        publicKey,
+        BigInt(Math.floor(Number(donationAmount) * 1e9))
+      )
+      transaction.add(transferInstruction)
+
+      const signature = await sendTransaction(transaction, connection)
+      await connection.confirmTransaction(signature, 'confirmed')
+
+      await axios.post('https://janka-project.vercel.app/api/donations', {
+        amount: Number(donationAmount),
+        message
+      })
+
+      if (ws) {
+        setTimeout(() => ws?.close(), 5000)
+      }
+
+      alert('Thank you for your donation!')
+    } catch (error) {
+      console.error('Error processing donation:', error)
+      alert('There was an error processing your donation. Please try again.')
+    }
+  }
+
   const handleFooterSubscribe = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
@@ -138,58 +190,6 @@ export default function WaitlistPage() {
     } catch (error) {
       console.error('Error subscribing to newsletter:', error)
       alert('There was an error subscribing to the newsletter. Please try again.')
-    }
-
-    const handleJoinTelegram = () => {
-      window.open('https://t.me/+mrbJewOGK_ZiOTI1', '_blank')
-    }
-
-    // Move DonationTracker logic to a custom hook
-    const {
-      totalDonations,
-      donorCount,
-      notifications,
-      connectToWebSocket
-    } = useDonationTracker()
-
-    const handleDonation = async (e: React.FormEvent) => {
-      e.preventDefault()
-      if (!publicKey) {
-        alert('Please connect your wallet first.')
-        return
-      }
-
-      let ws: WebSocket | null = null
-      try {
-        ws = connectToWebSocket()
-
-        const transaction = new Transaction()
-        const recipientPublicKey = new PublicKey('4TSJPLqvzfejeh2fPdXnUs8sFnfSQ2qSs2N4WYzA9usK')
-        const transferInstruction = createTransferInstruction(
-          publicKey,
-          recipientPublicKey,
-          publicKey,
-          BigInt(Math.floor(Number(donationAmount) * 1e9))
-        )
-        transaction.add(transferInstruction)
-
-        const signature = await sendTransaction(transaction, connection)
-        await connection.confirmTransaction(signature, 'confirmed')
-
-        await axios.post('https://janka-project.vercel.app/api/donations', {
-          amount: Number(donationAmount),
-          message
-        })
-
-        if (ws) {
-          setTimeout(() => ws?.close(), 5000)
-        }
-
-        alert('Thank you for your donation!')
-      } catch (error) {
-        console.error('Error processing donation:', error)
-        alert('There was an error processing your donation. Please try again.')
-      }
     }
 
     return (
