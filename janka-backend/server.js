@@ -37,22 +37,10 @@ if (!process.env.MONGODB_URI) {
   throw new Error('MONGODB_URI must be provided');
 }
 
-// Replace the certificate handling with environment variable
-const certContent = process.env.MONGODB_CERTIFICATE;
-let certPath;
-
-if (certContent) {
-  certPath = path.join(process.cwd(), 'cert.pem');
-  fs.writeFileSync(certPath, certContent);
-}
-
 mongoose.connect(process.env.MONGODB_URI, {
-  tlsCertificateKeyFile: certPath,
   retryWrites: true,
   w: 'majority',
-  serverSelectionTimeoutMS: 15000,
-  maxPoolSize: 10,
-  socketTimeoutMS: 45000,
+  tls: true,
 }).then(() => {
   console.log('Connected to MongoDB');
   // Start server only after successful MongoDB connection
