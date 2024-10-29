@@ -13,13 +13,13 @@ import Link from 'next/link'
 type ContractType = 'binary' | 'threshold'
 
 interface Market {
-  id: number
-  name: string
-  category: string
-  type: ContractType
-  probability?: string
-  volume: string
-  thresholds?: string[]
+  id: string;
+  name: string;
+  category: string;
+  type: ContractType;
+  probability?: string;
+  volume: string;
+  thresholds?: string[];
 }
 
 export default function ExploreMarketsPage() {
@@ -34,10 +34,10 @@ export default function ExploreMarketsPage() {
   ]
 
   const featuredMarkets: Market[] = [
-    { id: 1, name: 'US GDP Growth Q3 2024', category: 'finance', type: 'threshold', volume: '$1.2M', thresholds: ['Below 2%', '2% - 4%', 'Above 4%'] },
-    { id: 2, name: 'Hurricane Landfall Florida 2024', category: 'weather', type: 'binary', probability: '30%', volume: '$890K' },
-    { id: 3, name: 'Oil Price Above $80/barrel EOY', category: 'commodities', type: 'binary', probability: '75%', volume: '$2.5M' },
-    { id: 4, name: 'Renewable Energy Output EU Q4', category: 'energy', type: 'threshold', volume: '$1.8M', thresholds: ['Below 20%', '20% - 30%', 'Above 30%'] },
+    { id: '1', name: 'US GDP Growth Q3 2024', category: 'finance', type: 'threshold', volume: '$1.2M', thresholds: ['Below 2%', '2% - 4%', 'Above 4%'] },
+    { id: '2', name: 'Hurricane Landfall Florida 2024', category: 'weather', type: 'binary', probability: '30%', volume: '$890K' },
+    { id: '3', name: 'Oil Price Above $80/barrel EOY', category: 'commodities', type: 'binary', probability: '75%', volume: '$2.5M' },
+    { id: '4', name: 'Renewable Energy Output EU Q4', category: 'energy', type: 'threshold', volume: '$1.8M', thresholds: ['Below 20%', '20% - 30%', 'Above 30%'] },
   ]
 
   return (
@@ -122,7 +122,7 @@ export default function ExploreMarketsPage() {
                         <Button
                           size="sm"
                           className="w-full"
-                          onClick={() => router.push(`/trade-details/${market.id}`)}
+                          onClick={() => router.push(`/trade-details/${market.id.toString()}`)}
                         >
                           Trade <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
