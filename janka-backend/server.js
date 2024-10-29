@@ -8,6 +8,7 @@ const WebSocket = require('ws');
 const fs = require('fs');
 const validator = require('validator');
 const nodemailer = require('nodemailer');
+const { MongoClient, ServerApiVersion } = require('mongodb');
 
 dotenv.config();
 
@@ -37,11 +38,25 @@ if (!process.env.MONGODB_URI) {
   throw new Error('MONGODB_URI must be provided');
 }
 
-mongoose.connect(process.env.MONGODB_URI, {
-  retryWrites: true,
-  w: 'majority',
-  tls: true,
-}).then(() => {
+const client = new MongoClient(process.env.MONGODB_URI, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
+});
+
+async function connectToMongo() {
+  try {
+    await client.connect();
+    console.log("Connected to MongoDB Atlas");
+  } catch (error) {
+    console.error("Error connecting to MongoDB:", error);
+    process.exit(1);
+  }
+}
+
+connectToMongo().then(() => {
   console.log('Connected to MongoDB');
   // Start server only after successful MongoDB connection
   server.listen(port, () => {
@@ -271,4 +286,64 @@ app.use((req, res) => {
     success: false,
     message: 'Route not found'
   });
+});
+
+// Add robust error handling
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Application specific logging, throwing an error, or other logic here
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  // Application specific logging, throwing an error, or other logic here
+  process.exit(1);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  try {
+    await mongoose.connection.close();
+    console.log('MongoDB connection closed');
+    process.exit(0);
+  } catch (err) {
+    console.error('Error during shutdown:', err);
+    process.exit(1);
+  }
+});
+
+// Add connection options for better security
+const options = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  retryWrites: true,
+  w: "majority",
+  tls: true,
+  maxPoolSize: 10,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+  family: 4, // Use IPv4, skip trying IPv6
+  authSource: 'janka-admin',
+  // If you're using MongoDB Atlas App Services
+  useAppServices: true,
+};
+
+mongoose.connect(process.env.MONGODB_URI, {
+  ...options,
+  w: "majority"
+})
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
+// Add connection monitoring
+mongoose.connection.on('connected', () => {
+  console.log('Mongoose connected to MongoDB');
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('Mongoose connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('Mongoose disconnected');
 });
