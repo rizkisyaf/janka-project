@@ -40,7 +40,7 @@ export default function TermsOfService() {
           <div className="container mx-auto px-4">
             <h1 className="text-4xl md:text-5xl font-bold mb-6 text-center">Terms of Service</h1>
             <p className="text-xl mb-12 text-center max-w-3xl mx-auto text-gray-600 dark:text-gray-400">
-              We know, legal documents are usually a snooze-fest. But at Janka, we believe in clarity and fairness. So we have made our Terms of Service as clear and engaging as possible. Let's dive in!
+              We know, legal documents are usually a snooze-fest. But at Janka, we believe in clarity and fairness. So we have made our Terms of Service as clear and engaging as possible. Let&apos;s dive in!
             </p>
 
             <Card className="mb-8">
@@ -77,7 +77,7 @@ export default function TermsOfService() {
                           </div>
                         </AccordionTrigger>
                         <AccordionContent>
-                          You must be at least 18 years old and not barred from using cryptocurrency services in your jurisdiction. By using Janka, you're confirming that you meet these requirements.
+                          You must be at least 18 years old and not barred from using cryptocurrency services in your jurisdiction. By using Janka, you are confirming that you meet these requirements.
                         </AccordionContent>
                       </AccordionItem>
                       <AccordionItem value="item-2">

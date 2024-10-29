@@ -226,8 +226,12 @@ export default function WaitlistPage() {
               priority
             />
             <nav className="hidden md:flex space-x-4">
-              <a href="/" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Home</a>
-              <a href="/explore-market" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Explore Markets</a>
+              <Link href="/" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+                Home
+              </Link>
+              <Link href="/explore-market" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+                Explore Markets
+              </Link>
             </nav>
           </div>
           <div className="flex items-center space-x-4">
