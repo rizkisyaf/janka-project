@@ -27,52 +27,101 @@ function DonationTracker() {
   const [donorCount, setDonorCount] = useState(0)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [notificationId, setNotificationId] = useState(0)
+  const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected')
 
   const addNotification = useCallback((type: 'donation' | 'donor', amount?: number) => {
     const newId = notificationId + 1
     setNotificationId(newId)
     setNotifications(prev => [...prev, { id: newId, type, amount }])
 
-    // Remove notification after animation
     setTimeout(() => {
       setNotifications(prev => prev.filter(n => n.id !== newId))
     }, 3000)
   }, [notificationId])
 
   useEffect(() => {
+    let ws: WebSocket | null = null
+    let reconnectTimeout: NodeJS.Timeout
+    let reconnectAttempts = 0
+    const MAX_RECONNECT_ATTEMPTS = 5
+    const RECONNECT_INTERVAL = 1000 // Start with 1 second
+
+    const connectWebSocket = () => {
+      if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+        console.error('Max reconnection attempts reached')
+        setWsStatus('disconnected')
+        return
+      }
+
+      try {
+        setWsStatus('connecting')
+        ws = new WebSocket('wss://janka-project.vercel.app')
+
+        ws.onopen = () => {
+          console.log('WebSocket Connected')
+          setWsStatus('connected')
+          reconnectAttempts = 0 // Reset attempts on successful connection
+        }
+
+        ws.onclose = () => {
+          console.log('WebSocket Closed')
+          setWsStatus('disconnected')
+          // Exponential backoff for reconnection
+          const timeout = RECONNECT_INTERVAL * Math.pow(2, reconnectAttempts)
+          reconnectTimeout = setTimeout(() => {
+            reconnectAttempts++
+            connectWebSocket()
+          }, timeout)
+        }
+
+        ws.onerror = (error) => {
+          console.error('WebSocket Error:', error)
+        }
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data)
+            if (data.type === 'donation') {
+              setTotalDonations(prev => prev + data.amount)
+              addNotification('donation', data.amount)
+            } else if (data.type === 'donor') {
+              setDonorCount(prev => prev + 1)
+              addNotification('donor')
+            }
+          } catch (error) {
+            console.error('Error processing message:', error)
+          }
+        }
+      } catch (error) {
+        console.error('WebSocket connection error:', error)
+        setWsStatus('disconnected')
+      }
+    }
+
+    // Initial data fetch
     const fetchDonationData = async () => {
       try {
-        const response = await axios.get('http://janka-project.vercel.app/api/donations');
-        setTotalDonations(response.data.totalDonations);
-        setDonorCount(response.data.donorCount);
+        const response = await axios.get('https://janka-project.vercel.app/api/donations')
+        setTotalDonations(response.data.totalDonations)
+        setDonorCount(response.data.donorCount)
       } catch (error) {
-        console.error('Error fetching donation data:', error);
+        console.error('Error fetching donation data:', error)
       }
-    };
+    }
 
-    fetchDonationData();
+    fetchDonationData()
+    connectWebSocket()
 
-    const ws = new WebSocket('ws://janka-project.vercel.app');
-
-    ws.onopen = () => {
-      console.log('WebSocket Connected');
-    };
-
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'donation') {
-        setTotalDonations(prev => prev + data.amount);
-        addNotification('donation', data.amount);
-      } else if (data.type === 'donor') {
-        setDonorCount(prev => prev + 1);
-        addNotification('donor');
-      }
-    };
-
+    // Cleanup function
     return () => {
-      ws.close();
-    };
-  }, [addNotification]);
+      if (ws) {
+        ws.close()
+      }
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout)
+      }
+    }
+  }, [addNotification])
 
   return (
     <Card className="mb-8">
@@ -187,7 +236,7 @@ export default function WaitlistPage() {
       console.log('Donation successful:', signature);
 
       // Send donation data to the backend server
-      await axios.post('http://janka-project.vercel.app/api/donations', {
+      await axios.post('https://janka-project.vercel.app/api/donations', {
         amount: Number(donationAmount),
         message
       });

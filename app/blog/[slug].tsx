@@ -80,14 +80,14 @@ export const getStaticProps: GetStaticProps<BlogPageProps> = async () => {
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
     <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
       <url>
-        <loc>https://www.janka.com/blog</loc>
+        <loc>https://janka-project.vercel.app/blog</loc>
         <lastmod>${new Date().toISOString()}</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
       </url>
       ${blogPosts.map(post => `
         <url>
-          <loc>https://www.janka.com/blog/${post.slug}</loc>
+          <loc>https://janka-project.vercel.app/blog/${post.slug}</loc>
           <lastmod>${new Date(post.date).toISOString()}</lastmod>
           <changefreq>monthly</changefreq>
           <priority>0.6</priority>
@@ -101,9 +101,9 @@ export const getStaticProps: GetStaticProps<BlogPageProps> = async () => {
   const feed = new RSS({
     title: 'Janka Blog',
     description: 'Insights and updates on prediction markets, decentralized finance, and blockchain technology from the Janka team.',
-    feed_url: 'https://www.janka.com/rss.xml',
-    site_url: 'https://www.janka.com',
-    image_url: 'https://www.janka.com/logo.png',
+    feed_url: 'https://janka-project.vercel.app/rss.xml',
+    site_url: 'https://janka-project.vercel.app',
+    image_url: 'https://janka-project.vercel.app/logo.png',
     language: 'en',
     pubDate: new Date(),
   })
@@ -112,7 +112,7 @@ export const getStaticProps: GetStaticProps<BlogPageProps> = async () => {
     feed.item({
       title: post.title,
       description: post.excerpt,
-      url: `https://www.janka.com/blog/${post.slug}`,
+      url: `https://janka-project.vercel.app/blog/${post.slug}`,
       date: new Date(post.date),
       author: post.author,
     })
@@ -149,13 +149,13 @@ export default function BlogPage({ posts, currentPage, totalPages }: BlogPagePro
     "@type": "Blog",
     "name": "Janka Blog",
     "description": "Insights and updates on prediction markets, decentralized finance, and blockchain technology from the Janka team.",
-    "url": "https://www.janka.com/blog",
+    "url": "https://janka-project.vercel.app/blog",
     "publisher": {
       "@type": "Organization",
       "name": "Janka",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://www.janka.com/logo.png"
+        "url": "https://janka-project.vercel.app/logo.png"
       }
     },
     "blogPost": posts.map(post => ({
@@ -167,8 +167,8 @@ export default function BlogPage({ posts, currentPage, totalPages }: BlogPagePro
         "name": post.author
       },
       "datePublished": post.date,
-      "image": `https://www.janka.com${post.image}`,
-      "url": `https://www.janka.com/blog/${post.slug}`
+      "image": `https://janka-project.vercel.app${post.image}`,
+      "url": `https://janka-project.vercel.app/blog/${post.slug}`
     }))
   }
 
@@ -180,11 +180,11 @@ export default function BlogPage({ posts, currentPage, totalPages }: BlogPagePro
         <meta name="keywords" content={targetKeywords.join(', ')} />
         <meta property="og:title" content="Janka Blog: Insights on Prediction Markets and DeFi" />
         <meta property="og:description" content="Explore the latest insights on prediction markets, decentralized finance, and blockchain technology from the Janka team." />
-        <meta property="og:image" content="https://www.janka.com/og-image.jpg" />
-        <meta property="og:url" content="https://www.janka.com/blog" />
+        <meta property="og:image" content="https://janka-project.vercel.app/og-image.jpg" />
+        <meta property="og:url" content="https://janka-project.vercel.app/blog" />
         <meta name="twitter:card" content="summary_large_image" />
-        <link rel="canonical" href="https://www.janka.com/blog" />
-        <link rel="alternate" type="application/rss+xml" title="Janka Blog RSS Feed" href="https://www.janka.com/rss.xml" />
+        <link rel="canonical" href="https://janka-project.vercel.app/blog" />
+        <link rel="alternate" type="application/rss+xml" title="Janka Blog RSS Feed" href="https://janka-project.vercel.app/rss.xml" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Head>
 
@@ -256,15 +256,15 @@ export default function BlogPage({ posts, currentPage, totalPages }: BlogPagePro
                       <p>{post.readTime}</p>
                     </div>
                     <div className="flex space-x-2">
-                      <Button size="sm" variant="ghost" onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=https://www.janka.com/blog/${post.slug}`, '_blank')}>
+                      <Button size="sm" variant="ghost" onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=https://janka-project.vercel.app/blog/${post.slug}`, '_blank')}>
                         <Facebook className="h-4 w-4" />
                         <span className="sr-only">Share on Facebook</span>
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => window.open(`https://twitter.com/intent/tweet?url=https://www.janka.com/blog/${post.slug}&text=${encodeURIComponent(post.title)}`, '_blank')}>
+                      <Button size="sm" variant="ghost" onClick={() => window.open(`https://twitter.com/intent/tweet?url=https://janka-project.vercel.app/blog/${post.slug}&text=${encodeURIComponent(post.title)}`, '_blank')}>
                         <Twitter className="h-4 w-4" />
                         <span className="sr-only">Share on Twitter</span>
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => window.open(`https://www.linkedin.com/shareArticle?mini=true&url=https://www.janka.com/blog/${post.slug}&title=${encodeURIComponent(post.title)}`, '_blank')}>
+                      <Button size="sm" variant="ghost" onClick={() => window.open(`https://www.linkedin.com/shareArticle?mini=true&url=https://janka-project.vercel.app/blog/${post.slug}&title=${encodeURIComponent(post.title)}`, '_blank')}>
                         <Linkedin className="h-4 w-4" />
                         <span className="sr-only">Share on LinkedIn</span>
                       </Button>
