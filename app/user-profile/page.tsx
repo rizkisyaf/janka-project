@@ -37,19 +37,19 @@ export default function UserProfilePage() {
     const handleFooterSubscribe = async (e: React.FormEvent) => {
         e.preventDefault()
         try {
-          if (!footerEmail || !footerEmail.includes('@')) {
-            alert('Please enter a valid email address')
-            return
-          }
-    
-          const response = await axios.post('/api/newsletter', { email: footerEmail })
-          if (response.data.success) {
-            alert('Thank you for subscribing to our newsletter!')
-            setFooterEmail('')
-          }
+            if (!footerEmail || !footerEmail.includes('@')) {
+                alert('Please enter a valid email address')
+                return
+            }
+
+            const response = await axios.post('/api/newsletter', { email: footerEmail })
+            if (response.data.success) {
+                alert('Thank you for subscribing to our newsletter!')
+                setFooterEmail('')
+            }
         } catch (error) {
-          console.error('Error subscribing to newsletter:', error)
-          alert('There was an error subscribing to the newsletter. Please try again.')
+            console.error('Error subscribing to newsletter:', error)
+            alert('There was an error subscribing to the newsletter. Please try again.')
         }
     }
 
@@ -361,7 +361,7 @@ export default function UserProfilePage() {
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/resources/janka-blog" passHref>
+                                    <Link href="/blog/${post.slug}/${post.slug}" passHref>
                                         <a className="hover:text-gray-300">Blog</a>
                                     </Link>
                                 </li>
@@ -371,22 +371,22 @@ export default function UserProfilePage() {
                             <h4 className="text-lg font-semibold mb-4">Legal</h4>
                             <ul className="space-y-2">
                                 <li>
-                                    <Link href="#" passHref>
+                                    <Link href="/legal/privacy-policy" passHref>
                                         <a className="hover:text-gray-300">Privacy Policy</a>
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="#" passHref>
+                                    <Link href="/legal/terms-of-service" passHref>
                                         <a className="hover:text-gray-300">Terms of Service</a>
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="#" passHref>
+                                    <Link href="/legal/cookies-policy" passHref>
                                         <a className="hover:text-gray-300">Cookie Policy</a>
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="#" passHref>
+                                    <Link href="/legal/compliance" passHref>
                                         <a className="hover:text-gray-300">Compliance</a>
                                     </Link>
                                 </li>

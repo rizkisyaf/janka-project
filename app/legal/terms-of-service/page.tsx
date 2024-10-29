@@ -20,7 +20,7 @@ export default function TermsOfService() {
         <title>Janka Terms of Service | Clear, Fair, and Actually Readable</title>
         <meta name="description" content="Discover Janka's Terms of Service. We've made them clear, fair, and actually readable. Understand your rights and responsibilities while using our revolutionary prediction market platform." />
         <meta name="keywords" content="Janka, terms of service, user agreement, prediction markets, blockchain, transparency" />
-        <link rel="canonical" href="https://janka-project.vercel.app/terms-of-service" />
+        <link rel="canonical" href="https://janka-project.vercel.app/legal/terms-of-service" />
       </Head>
 
       <header className="sticky top-0 z-50 w-full bg-white dark:bg-gray-800 shadow-sm">
@@ -223,8 +223,8 @@ export default function TermsOfService() {
             <Badge variant="outline">Fair Play</Badge>
           </div>
           <div className="mt-6">
-            <Link href="/privacy-policy" className="text-sm hover:underline mr-4">Privacy Policy</Link>
-            <Link href="/terms-of-service" className="text-sm hover:underline">Terms of Service</Link>
+            <Link href="/legal/privacy-policy" className="text-sm hover:underline mr-4">Privacy Policy</Link>
+            <Link href="/legal/terms-of-service" className="text-sm hover:underline">Terms of Service</Link>
           </div>
         </div>
       </footer>

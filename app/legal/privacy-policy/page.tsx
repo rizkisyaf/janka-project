@@ -19,7 +19,7 @@ export default function PrivacyPolicy() {
         <title>Janka Privacy Policy | Clear, Simple, and Actually Readable</title>
         <meta name="description" content="Discover Janka's commitment to your privacy. Our policy is clear, simple, and actually readable. Learn how we protect your data while revolutionizing prediction markets." />
         <meta name="keywords" content="Janka, privacy policy, data protection, prediction markets, blockchain, transparency" />
-        <link rel="canonical" href="https://janka-project.vercel.app/privacy-policy" />
+        <link rel="canonical" href="https://janka-project.vercel.app/legal/privacy-policy" />
       </Head>
 
       <header className="sticky top-0 z-50 w-full bg-white dark:bg-gray-800 shadow-sm">

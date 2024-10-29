@@ -20,7 +20,7 @@ export default function CookiesPolicy() {
         <title>Janka Cookies Policy | Clear, Transparent, and Actually Digestible</title>
         <meta name="description" content="Discover Janka's Cookies Policy. We've made it clear, transparent, and actually digestible. Understand how we use cookies to enhance your experience on our revolutionary prediction market platform." />
         <meta name="keywords" content="Janka, cookies policy, user privacy, prediction markets, blockchain, transparency" />
-        <link rel="canonical" href="https://janka-project.vercel.app/cookies-policy" />
+        <link rel="canonical" href="https://janka-project.vercel.app/legal/cookies-policy" />
       </Head>
 
       <header className="sticky top-0 z-50 w-full bg-white dark:bg-gray-800 shadow-sm">
@@ -216,9 +216,9 @@ export default function CookiesPolicy() {
             <Badge variant="outline">Transparency</Badge>
           </div>
           <div className="mt-6">
-            <Link href="/privacy-policy" className="text-sm hover:underline mr-4">Privacy Policy</Link>
-            <Link href="/terms-of-service" className="text-sm hover:underline mr-4">Terms of Service</Link>
-            <Link href="/cookies-policy" className="text-sm hover:underline">Cookies Policy</Link>
+            <Link href="/legal/privacy-policy" className="text-sm hover:underline mr-4">Privacy Policy</Link>
+            <Link href="/legal/terms-of-service" className="text-sm hover:underline mr-4">Terms of Service</Link>
+            <Link href="/legal/cookies-policy" className="text-sm hover:underline">Cookies Policy</Link>
           </div>
         </div>
       </footer>
