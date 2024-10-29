@@ -2,8 +2,10 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const path = require('path');
 const { Telegraf } = require('telegraf');
 const WebSocket = require('ws');
+const fs = require('fs');
 
 dotenv.config();
 
@@ -20,15 +22,20 @@ if (!process.env.MONGODB_URI) {
   throw new Error('MONGODB_URI must be provided');
 }
 
-const certPath = './X509-cert-1508285637655077492.pem';
+// Replace the certificate handling with environment variable
+const certContent = process.env.MONGODB_CERTIFICATE;
+let certPath;
 
-mongoose.connect('mongodb+srv://cluster0.o1ajn.mongodb.net/?authSource=$external&authMechanism=MONGODB-X509&retryWrites=true&w=majority&appName=Cluster0', {
-  tls: true,
+if (certContent) {
+  certPath = path.join(process.cwd(), 'cert.pem');
+  fs.writeFileSync(certPath, certContent);
+}
+
+mongoose.connect(process.env.MONGODB_URI, {
   tlsCertificateKeyFile: certPath,
-  authMechanism: 'MONGODB-X509',
-  authSource: '$external',
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000
+  retryWrites: true,
+  w: 'majority',
+  serverSelectionTimeoutMS: 15000,
 }).then(() => {
   console.log('Connected to MongoDB');
   // Start server only after successful MongoDB connection
