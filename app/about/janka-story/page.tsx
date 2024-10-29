@@ -38,7 +38,7 @@ export default function JankaStory() {
               Three years ago, as a cafe owner, I experienced firsthand how unexpected events like bad weather could significantly impact daily revenue. Despite services like Gojek, my business suffered.
             </p>
             <p className="text-lg">
-              This experience wasn't unique. Many customers shared similar stories of how unpredictable events affected their livelihoods, and traditional insurance couldn't adequately cover these scenarios.
+              This experience was not unique. Many customers shared similar stories of how unpredictable events affected their livelihoods, and traditional insurance could not adequately cover these scenarios.
             </p>
           </div>
           <Card>
@@ -61,7 +61,7 @@ export default function JankaStory() {
           <div>
             <h2 className="text-3xl font-bold mb-4">The Problem</h2>
             <p className="text-lg mb-4">
-              Traditional insurance often falls short in covering specific, short-term risks that businesses face daily. Weather changes, local events, or sudden market shifts can all have immediate impacts that aren't typically insured.
+              Traditional insurance often falls short in covering specific, short-term risks that businesses face daily. Weather changes, local events, or sudden market shifts can all have immediate impacts that are not typically insured.
             </p>
             <p className="text-lg">
               Moreover, the insurance industry itself seemed stuck in old ways, not leveraging modern technology to provide more responsive and tailored solutions.
@@ -95,7 +95,7 @@ export default function JankaStory() {
         <section className="text-center mb-16">
           <h2 className="text-3xl font-bold mb-4">The Journey Ahead</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
-            After three years of ideation and development, Janka is ready to revolutionize the way businesses protect themselves against unexpected events. We're excited to bring this solution to you and continue innovating in the insurance space.
+            After three years of ideation and development, Janka is ready to revolutionize the way businesses protect themselves against unexpected events. We are excited to bring this solution to you and continue innovating in the insurance space.
           </p>
           <Button size="lg" className="bg-primary text-primary-foreground">
             Join the Revolution <ArrowRight className="ml-2" />

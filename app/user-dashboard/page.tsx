@@ -198,7 +198,7 @@ export default function UserDashboard() {
                       index="name"
                       categories={['value']}
                       colors={['blue']}
-                      valueFormatter={(value: any) => `$${value}`}
+                      valueFormatter={(value: number) => `$${value}`}
                       className="h-[200px]"
                     />
                   </CardContent>
@@ -289,7 +289,7 @@ export default function UserDashboard() {
                       index="category"
                       categories={['successful', 'unsuccessful']}
                       colors={['green', 'red']}
-                      valueFormatter={(value: any) => `${value} hedges`}
+                      valueFormatter={(value: number) => `${value} hedges`}
                       className="h-[200px]"
                     />
                   </CardContent>
@@ -309,7 +309,7 @@ export default function UserDashboard() {
                       index="name"
                       categories={['value']}
                       colors={['sky', 'blue', 'indigo', 'violet']}
-                      valueFormatter={(value: any) => `${value}%`}
+                      valueFormatter={(value: number) => `${value}%`}
                       className="h-[200px]"
                     />
                   </CardContent>

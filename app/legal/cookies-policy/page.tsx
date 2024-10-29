@@ -40,12 +40,12 @@ export default function CookiesPolicy() {
           <div className="container mx-auto px-4">
             <h1 className="text-4xl md:text-5xl font-bold mb-6 text-center">Cookies Policy</h1>
             <p className="text-xl mb-12 text-center max-w-3xl mx-auto text-gray-600 dark:text-gray-400">
-              We know, "cookies" sounds delicious, but we're not talking about the edible kind. Let's break down how Janka uses digital cookies to enhance your experience, in a way that's actually digestible!
+              We know, cookies sounds delicious, but we are not talking about the edible kind. Lets break down how Janka uses digital cookies to enhance your experience, in a way that is actually digestible!
             </p>
 
             <Card className="mb-8">
               <CardHeader>
-                <CardTitle className="text-2xl">TL;DR (Too Long; Didn't Read)</CardTitle>
+                <CardTitle className="text-2xl">TL;DR (Too Long; Did not Read)</CardTitle>
                 <CardDescription>The quick version for those in a hurry</CardDescription>
               </CardHeader>
               <CardContent>
@@ -109,7 +109,7 @@ export default function CookiesPolicy() {
                           </div>
                         </AccordionTrigger>
                         <AccordionContent>
-                          You can change your cookie preferences at any time. Visit our cookie preferences center or adjust your browser settings. Remember, some cookies are essential for Janka to function properly and can't be disabled.
+                          You can change your cookie preferences at any time. Visit our cookie preferences center or adjust your browser settings. Remember, some cookies are essential for Janka to function properly and can not be disabled.
                         </AccordionContent>
                       </AccordionItem>
                     </Accordion>
@@ -122,7 +122,7 @@ export default function CookiesPolicy() {
                     <div className="space-y-6">
                       <div>
                         <h3 className="text-lg font-semibold mb-2">1. Introduction</h3>
-                        <p>This Cookies Policy explains how Janka ("we", "us", "our") uses cookies and similar technologies to recognize you when you visit our website at https://www.janka.com ("Website"). It explains what these technologies are and why we use them, as well as your rights to control our use of them.</p>
+                        <p>This Cookies Policy explains how Janka (we, us, our) uses cookies and similar technologies to recognize you when you visit our website at https://www.janka.com (Website). It explains what these technologies are and why we use them, as well as your rights to control our use of them.</p>
                       </div>
                       <div>
                         <h3 className="text-lg font-semibold mb-2">2. What are cookies?</h3>
@@ -130,7 +130,7 @@ export default function CookiesPolicy() {
                       </div>
                       <div>
                         <h3 className="text-lg font-semibold mb-2">3. Why do we use cookies?</h3>
-                        <p>We use first party and third party cookies for several reasons. Some cookies are required for technical reasons in order for our Website to operate, and we refer to these as "essential" or "strictly necessary" cookies. Other cookies enable us to track and target the interests of our users to enhance the experience on our Website. Third parties serve cookies through our Website for advertising, analytics and other purposes.</p>
+                        <p>We use first party and third party cookies for several reasons. Some cookies are required for technical reasons in order for our Website to operate, and we refer to these as essential or strictly necessary cookies. Other cookies enable us to track and target the interests of our users to enhance the experience on our Website. Third parties serve cookies through our Website for advertising, analytics and other purposes.</p>
                       </div>
                       <div>
                         <h3 className="text-lg font-semibold mb-2">4. Types of cookies we use</h3>
@@ -162,7 +162,7 @@ export default function CookiesPolicy() {
 
             <div className="text-center">
               <h2 className="text-2xl font-bold mb-4">Want to adjust your cookie preferences?</h2>
-              <p className="mb-6">You can customize your cookie settings at any time. It's quick and easy!</p>
+              <p className="mb-6">You can customize your cookie settings at any time. It is quick and easy!</p>
               <Button>
                 Open Cookie Preferences <Settings className="ml-2 h-4 w-4" />
               </Button>
@@ -186,7 +186,7 @@ export default function CookiesPolicy() {
               <Card>
                 <CardHeader>
                   <ToggleLeft className="h-12 w-12 mb-4 mx-auto text-primary" />
-                  <CardTitle>You're in Control</CardTitle>
+                  <CardTitle>You are in Control</CardTitle>
                 </CardHeader>
                 <CardContent>
                   We give you the power to control your cookie preferences. You decide what non-essential cookies to accept.
@@ -198,7 +198,7 @@ export default function CookiesPolicy() {
                   <CardTitle>Regular Clean-up</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  We regularly review and clean up our cookies to ensure we're only collecting what's necessary to improve your experience.
+                  We regularly review and clean up our cookies to ensure we are only collecting what is necessary to improve your experience.
                 </CardContent>
               </Card>
             </div>

@@ -1,9 +1,9 @@
 'use client'
 
-export const TelegramWrapper = () => {
+export const TelegramWrapper = async () => {
   if (typeof window === 'undefined') {
-    const TelegramClient = require('telegram').TelegramClient;
-    const StringSession = require('telegram/sessions').StringSession;
+    const { TelegramClient } = await import('telegram');
+    const { StringSession } = await import('telegram/sessions');
     
     const apiId = process.env.TELEGRAM_API_ID ?? '';
     const apiHash = process.env.TELEGRAM_API_HASH ?? '';
@@ -12,4 +12,4 @@ export const TelegramWrapper = () => {
     const telegramClient = new TelegramClient(stringSession, Number(apiId), apiHash, { connectionRetries: 5 });
   }
   return null;
-} 
+}

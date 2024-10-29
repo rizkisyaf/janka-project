@@ -2,6 +2,7 @@ import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Github, Linkedin, Twitter } from 'lucide-react'
+import Image from 'next/image'
 
 export default function JankaTeams() {
   const teamMembers = [
@@ -42,7 +43,7 @@ export default function JankaTeams() {
       <header className="sticky top-0 z-50 w-full bg-white dark:bg-gray-800 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <img src="/janka-logo.svg?height=40&width=40" alt="Janka Logo" className="h-10 w-10" />
+            <Image src="/janka-logo.svg?height=40&width=40" alt="Janka Logo" className="h-10 w-10" />
             <span className="text-xl font-bold">Janka</span>
           </div>
           <Button>Get Started</Button>
@@ -61,7 +62,7 @@ export default function JankaTeams() {
           {teamMembers.map((member, index) => (
             <Card key={index} className="overflow-hidden">
               <CardHeader className="p-0">
-                <img src={member.image} alt={member.name} className="w-full h-64 object-cover" />
+                <Image src={member.image} alt={member.name} className="w-full h-64 object-cover" />
               </CardHeader>
               <CardContent className="p-6">
                 <CardTitle className="text-2xl mb-2">{member.name}</CardTitle>
@@ -95,7 +96,7 @@ export default function JankaTeams() {
         <section className="mt-16 text-center">
           <h2 className="text-3xl font-bold mb-4">Join Our Team</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
-            We're always looking for passionate individuals to help us shape the future of insurance. If you're excited about blockchain and insurtech, we'd love to hear from you!
+            We are always looking for passionate individuals to help us shape the future of insurance. If you are excited about blockchain and insurtech, we do love to hear from you!
           </p>
           <Button size="lg" className="bg-primary text-primary-foreground">
             View Open Positions

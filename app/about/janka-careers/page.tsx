@@ -167,7 +167,7 @@ export default function JankaCareers() {
             <AccordionItem value="item-3">
               <AccordionTrigger>What is your remote work policy?</AccordionTrigger>
               <AccordionContent>
-                Janka is a remote-first company. While we have a physical office, most of our team works remotely. We believe in giving our employees the flexibility to work from where they're most productive.
+                Janka is a remote-first company. While we have a physical office, most of our team works remotely. We believe in giving our employees the flexibility to work from where they are most productive.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-4">

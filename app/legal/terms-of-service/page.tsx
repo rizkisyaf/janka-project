@@ -40,12 +40,12 @@ export default function TermsOfService() {
           <div className="container mx-auto px-4">
             <h1 className="text-4xl md:text-5xl font-bold mb-6 text-center">Terms of Service</h1>
             <p className="text-xl mb-12 text-center max-w-3xl mx-auto text-gray-600 dark:text-gray-400">
-              We know, legal documents are usually a snooze-fest. But at Janka, we believe in clarity and fairness. So we've made our Terms of Service as clear and engaging as possible. Let's dive in!
+              We know, legal documents are usually a snooze-fest. But at Janka, we believe in clarity and fairness. So we have made our Terms of Service as clear and engaging as possible. Let's dive in!
             </p>
 
             <Card className="mb-8">
               <CardHeader>
-                <CardTitle className="text-2xl">TL;DR (Too Long; Didn't Read)</CardTitle>
+                <CardTitle className="text-2xl">TL;DR (Too Long; Did not Read)</CardTitle>
                 <CardDescription>The quick version for those in a hurry</CardDescription>
               </CardHeader>
               <CardContent>
@@ -53,8 +53,8 @@ export default function TermsOfService() {
                   <li>You must be 18+ to use Janka.</li>
                   <li>Be responsible and respectful when using our platform.</li>
                   <li>Your predictions and trades are your responsibility.</li>
-                  <li>We're not liable for your losses or gains.</li>
-                  <li>Don't do anything illegal or manipulative on our platform.</li>
+                  <li>We are not liable for your losses or gains.</li>
+                  <li>Do not do anything illegal or manipulative on our platform.</li>
                   <li>We can terminate your account if you violate these terms.</li>
                 </ul>
               </CardContent>
@@ -88,7 +88,7 @@ export default function TermsOfService() {
                           </div>
                         </AccordionTrigger>
                         <AccordionContent>
-                          You're responsible for maintaining the security of your account, making informed predictions, and ensuring you have the necessary funds for your trades. Don't engage in any fraudulent or manipulative activities.
+                          You are responsible for maintaining the security of your account, making informed predictions, and ensuring you have the necessary funds for your trades. Do not engage in any fraudulent or manipulative activities.
                         </AccordionContent>
                       </AccordionItem>
                       <AccordionItem value="item-3">
@@ -99,7 +99,7 @@ export default function TermsOfService() {
                           </div>
                         </AccordionTrigger>
                         <AccordionContent>
-                          We strive to provide a fair, transparent, and secure platform for prediction markets. However, we're not responsible for your trading decisions or any losses you might incur. We reserve the right to modify or terminate services as needed.
+                          We strive to provide a fair, transparent, and secure platform for prediction markets. However, we are not responsible for your trading decisions or any losses you might incur. We reserve the right to modify or terminate services as needed.
                         </AccordionContent>
                       </AccordionItem>
                       <AccordionItem value="item-4">
@@ -135,7 +135,7 @@ export default function TermsOfService() {
                       </div>
                       <div>
                         <h3 className="text-lg font-semibold mb-2">4. Use of Services</h3>
-                        <p>You agree to use Janka's services only for lawful purposes and in accordance with these Terms. You are prohibited from using the platform to engage in any fraudulent, manipulative, or illegal activities.</p>
+                        <p>You agree to use Janka&apos;s services only for lawful purposes and in accordance with these Terms. You are prohibited from using the platform to engage in any fraudulent, manipulative, or illegal activities.</p>
                       </div>
                       <div>
                         <h3 className="text-lg font-semibold mb-2">5. Prediction Markets and Trading</h3>
@@ -187,7 +187,7 @@ export default function TermsOfService() {
                   <CardTitle>Fair and Transparent</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  We're committed to providing a level playing field for all users. Our terms are designed to protect both you and the integrity of our platform.
+                  We are committed to providing a level playing field for all users. Our terms are designed to protect both you and the integrity of our platform.
                 </CardContent>
               </Card>
               <Card>
@@ -196,7 +196,7 @@ export default function TermsOfService() {
                   <CardTitle>Your Security First</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  We've implemented robust security measures to protect your account and funds. Your safety is our top priority.
+                  We have implemented robust security measures to protect your account and funds. Your safety is our top priority.
                 </CardContent>
               </Card>
               <Card>
@@ -205,7 +205,7 @@ export default function TermsOfService() {
                   <CardTitle>Clear Communication</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  We believe in clear, jargon-free communication. If something's not clear, we're always here to explain.
+                  We believe in clear, jargon-free communication. If something&apos;s not clear, we&apos;re always here to explain.
                 </CardContent>
               </Card>
             </div>

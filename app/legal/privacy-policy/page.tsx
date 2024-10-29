@@ -39,12 +39,12 @@ export default function PrivacyPolicy() {
           <div className="container mx-auto px-4">
             <h1 className="text-4xl md:text-5xl font-bold mb-6 text-center">Privacy Policy</h1>
             <p className="text-xl mb-12 text-center max-w-3xl mx-auto text-gray-600 dark:text-gray-400">
-              We know, privacy policies are usually boring. But at Janka, we believe in transparency and actually want you to read this. So we've made it as clear and engaging as possible. Let's dive in!
+              We know, privacy policies are usually boring. But at Janka, we believe in transparency and actually want you to read this. So we have made it as clear and engaging as possible. Lets dive in!
             </p>
 
             <Card className="mb-8">
               <CardHeader>
-                <CardTitle className="text-2xl">TL;DR (Too Long; Didn't Read)</CardTitle>
+                <CardTitle className="text-2xl">TL;DR (Too Long; Did not Read)</CardTitle>
                 <CardDescription>The quick version for those in a hurry</CardDescription>
               </CardHeader>
               <CardContent>
@@ -52,7 +52,7 @@ export default function PrivacyPolicy() {
                   <li>We collect only what we need to provide and improve our services.</li>
                   <li>Your prediction market activities are on the blockchain and pseudonymous.</li>
                   <li>We use industry-standard security measures to protect your data.</li>
-                  <li>We don't sell your personal data. Ever.</li>
+                  <li>We do not sell your personal data. Ever.</li>
                   <li>You have control over your data and can request changes or deletion.</li>
                 </ul>
               </CardContent>
@@ -97,7 +97,7 @@ export default function PrivacyPolicy() {
                           </div>
                         </AccordionTrigger>
                         <AccordionContent>
-                          We use encryption, secure servers, and regular security audits. Your wallet's private keys are never stored on our servers. We follow industry best practices to keep your data safe.
+                          We use encryption, secure servers, and regular security audits. Your wallet&apos;s private keys are never stored on our servers. We follow industry best practices to keep your data safe.
                         </AccordionContent>
                       </AccordionItem>
                       <AccordionItem value="item-4">
@@ -184,7 +184,7 @@ export default function PrivacyPolicy() {
 
             <div className="text-center">
               <h2 className="text-2xl font-bold mb-4">Still have questions?</h2>
-              <p className="mb-6">We're here to help! Reach out to our friendly privacy team.</p>
+              <p className="mb-6">We are here to help! Reach out to our friendly privacy team.</p>
               <Button>
                 Contact Us <MessageSquare className="ml-2 h-4 w-4" />
               </Button>
@@ -220,7 +220,7 @@ export default function PrivacyPolicy() {
                   <CardTitle>Transparency First</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  We're committed to being open about our data practices. No hidden agendas, no fine print.
+                  We are committed to being open about our data practices. No hidden agendas, no fine print.
                 </CardContent>
               </Card>
             </div>

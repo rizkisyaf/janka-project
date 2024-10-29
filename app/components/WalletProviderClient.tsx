@@ -9,7 +9,7 @@ import { ConnectionProvider } from "@solana/wallet-adapter-react";
 import { clusterApiUrl } from "@solana/web3.js";
 
 // Import wallet adapter CSS
-require("@solana/wallet-adapter-react-ui/styles.css");
+import "@solana/wallet-adapter-react-ui/styles.css";
 
 export default function WalletProviderClient({ children }: { children: ReactNode }) {
   // You can also provide a custom RPC endpoint

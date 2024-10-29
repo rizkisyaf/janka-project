@@ -41,7 +41,7 @@ export default function JankaPressKit() {
         <section className="text-center mb-16">
           <h1 className="text-4xl md:text-6xl font-bold mb-4">Janka Press Kit</h1>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
-            Welcome to the Janka press kit. Here you'll find everything you need to accurately represent our brand and mission.
+            Welcome to the Janka press kit. Here you will find everything you need to accurately represent our brand and mission.
           </p>
         </section>
 
@@ -140,7 +140,7 @@ export default function JankaPressKit() {
         <section className="text-center mt-16">
           <h2 className="text-3xl font-bold mb-4">Need More Information?</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
-            If you're a member of the press and need additional information or would like to schedule an interview, please don't hesitate to reach out.
+            If you are a member of the press and need additional information or would like to schedule an interview, please do not hesitate to reach out.
           </p>
           <Button size="lg" className="bg-primary text-primary-foreground">
             <Users className="mr-2 h-4 w-4" /> Contact Our PR Team
