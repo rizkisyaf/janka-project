@@ -13,20 +13,12 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import { PublicKey, Transaction } from '@solana/web3.js'
 import { createTransferInstruction } from '@solana/spl-token'
 import axios from 'axios'
-import { TelegramClient } from 'telegram'
-import { StringSession } from 'telegram/sessions'
 
 interface Notification {
   id: number;
   type: 'donation' | 'donor';
   amount?: number;
 }
-
-const apiId = process.env.TELEGRAM_API_ID
-const apiHash = process.env.TELEGRAM_API_HASH
-const botToken = process.env.TELEGRAM_BOT_TOKEN
-const stringSession = new StringSession('')
-const telegramClient = new TelegramClient(stringSession, Number(apiId), apiHash, { connectionRetries: 5 })
 
 function DonationTracker() {
   const [totalDonations, setTotalDonations] = useState(0)
@@ -35,36 +27,39 @@ function DonationTracker() {
   const [notificationId, setNotificationId] = useState(0)
 
   useEffect(() => {
-    // Fetch initial donation data from your backend
     const fetchDonationData = async () => {
       try {
-        const response = await axios.get('/api/donations')
-        setTotalDonations(response.data.totalDonations)
-        setDonorCount(response.data.donorCount)
+        const response = await axios.get('http://localhost:3000/api/donations');
+        setTotalDonations(response.data.totalDonations);
+        setDonorCount(response.data.donorCount);
       } catch (error) {
-        console.error('Error fetching donation data:', error)
+        console.error('Error fetching donation data:', error);
       }
-    }
+    };
 
-    fetchDonationData()
+    fetchDonationData();
 
-    // Set up real-time updates (e.g., using WebSockets)
-    const socket = new WebSocket('wss://your-backend-url.com/donations')
-    socket.onmessage = (event) => {
-      const data = JSON.parse(event.data)
+    const ws = new WebSocket('ws://localhost:3000');
+    
+    ws.onopen = () => {
+      console.log('WebSocket Connected');
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
       if (data.type === 'donation') {
-        setTotalDonations(prev => prev + data.amount)
-        addNotification('donation', data.amount)
+        setTotalDonations(prev => prev + data.amount);
+        addNotification('donation', data.amount);
       } else if (data.type === 'donor') {
-        setDonorCount(prev => prev + 1)
-        addNotification('donor')
+        setDonorCount(prev => prev + 1);
+        addNotification('donor');
       }
-    }
+    };
 
     return () => {
-      socket.close()
-    }
-  }, [])
+      ws.close();
+    };
+  }, []);
 
   const addNotification = (type: 'donation' | 'donor', amount?: number) => {
     const newId = notificationId + 1
@@ -155,49 +150,45 @@ export default function WaitlistPage() {
   }
 
   const handleJoinTelegram = () => {
-    window.open('https://t.me/JankaPublicGroup', '_blank')
+    window.open('https://t.me/+mrbJewOGK_ZiOTI1', '_blank')
   }
 
   const handleDonation = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!publicKey) {
-      alert('Please connect your wallet first.')
-      return
+      alert('Please connect your wallet first.');
+      return;
     }
 
     try {
-      // Create a Solana Pay transaction
-      const transaction = new Transaction()
-      const recipientPublicKey = new PublicKey('YOUR_RECIPIENT_WALLET_ADDRESS')
+      // Process the donation transaction on Solana
+      const transaction = new Transaction();
+      const recipientPublicKey = new PublicKey('4TSJPLqvzfejeh2fPdXnUs8sFnfSQ2qSs2N4WYzA9usK');
       const transferInstruction = createTransferInstruction(
         publicKey,
         recipientPublicKey,
         publicKey,
-        BigInt(Math.floor(Number(donationAmount) * 1e9)) // Convert to lamports
-      )
-      transaction.add(transferInstruction)
+        BigInt(Math.floor(Number(donationAmount) * 1e9))
+      );
+      transaction.add(transferInstruction);
 
-      // Send the transaction
-      const signature = await sendTransaction(transaction, connection)
-      await connection.confirmTransaction(signature, 'confirmed')
+      const signature = await sendTransaction(transaction, connection);
+      await connection.confirmTransaction(signature, 'confirmed');
+      console.log('Donation successful:', signature);
 
-      console.log('Donation successful:', signature)
+      // Send donation data to the backend server
+      await axios.post('http://localhost:3000/api/donations', {
+        amount: Number(donationAmount),
+        message
+      });
 
-      // Update donation tracker
-      await axios.post('/api/donations', { amount: Number(donationAmount), message })
-
-      // Send message to Telegram group
-      await telegramClient.connect()
-      await telegramClient.sendMessage('JankaEarlyInvestors', {
-        message: `New donation received: $${donationAmount}\nMessage: ${message || 'No message'}`
-      })
-
-      alert('Thank you for your donation!')
+      alert('Thank you for your donation!');
     } catch (error) {
-      console.error('Error processing donation:', error)
-      alert('There was an error processing your donation. Please try again.')
+      console.error('Error processing donation:', error);
+      alert('There was an error processing your donation. Please try again.');
     }
-  }
+  };
+
 
   return (
     <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
@@ -292,11 +283,11 @@ export default function WaitlistPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <MessageCircle className="mr-2 h-6 w-6" />
-                    Join Our Investor Community
+                    Join Our Community
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="mb-4">Connect with the founders and other investors in our exclusive Telegram group. Stay updated on our progress and provide valuable feedback.</p>
+                  <p className="mb-4">Connect with the founders in our Telegram group. Stay updated on our progress and provide valuable feedback.</p>
                   <Button onClick={handleJoinTelegram} className="w-full">
                     Join Telegram Group <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -417,7 +408,7 @@ export default function WaitlistPage() {
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold mb-6">Governance Token and Share Structure</h2>
             <p className="text-xl mb-8 max-w-3xl mx-auto text-gray-600 dark:text-gray-400">
-              Janka will launch a governance token directly connected to real-world shares in our company (PT - Perseroan Terbatas).
+              Janka will launch a governance token directly connected to real-world shares in our company (PT Janka Assurance Dynamics).
             </p>
             <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
               <Card>

@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "ES2017", 
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
+    "types": ["connect", "istanbul-lib-coverage", "istanbul-reports", "rss"],
     "typeRoots": ["./node_modules/@types"],
     "skipLibCheck": true,
     "strict": true,

@@ -3,20 +3,41 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const { Telegraf } = require('telegraf');
+const WebSocket = require('ws');
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+const server = require('http').createServer(app);
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
 // MongoDB connection
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
+if (!process.env.MONGODB_URI) {
+  throw new Error('MONGODB_URI must be provided');
+}
+
+const certPath = './X509-cert-1508285637655077492.pem';
+
+mongoose.connect('mongodb+srv://cluster0.o1ajn.mongodb.net/?authSource=$external&authMechanism=MONGODB-X509&retryWrites=true&w=majority&appName=Cluster0', {
+  tls: true,
+  tlsCertificateKeyFile: certPath,
+  authMechanism: 'MONGODB-X509',
+  authSource: '$external',
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000
+}).then(() => {
+  console.log('Connected to MongoDB');
+  // Start server only after successful MongoDB connection
+  server.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+}).catch((err) => {
+  console.error('MongoDB connection error:', err);
+  process.exit(1);
 });
 
 const db = mongoose.connection;
@@ -26,24 +47,41 @@ db.once('open', () => {
 });
 
 // Telegram bot setup
+if (!process.env.TELEGRAM_BOT_TOKEN) {
+  throw new Error('TELEGRAM_BOT_TOKEN must be provided');
+}
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 bot.launch();
 
 // Models
-const Waitlist = mongoose.model('Waitlist', {
+const waitlistSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   createdAt: { type: Date, default: Date.now },
 });
+const Waitlist = mongoose.model('Waitlist', waitlistSchema);
 
-const Newsletter = mongoose.model('Newsletter', {
+const newsletterSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   createdAt: { type: Date, default: Date.now },
 });
+const Newsletter = mongoose.model('Newsletter', newsletterSchema);
 
-const Donation = mongoose.model('Donation', {
+const donationSchema = new mongoose.Schema({
   amount: { type: Number, required: true },
   message: String,
   createdAt: { type: Date, default: Date.now },
+});
+const Donation = mongoose.model('Donation', donationSchema);
+
+// Create WebSocket server
+const wss = new WebSocket.Server({ server });
+
+wss.on('connection', (ws) => {
+  console.log('Client connected');
+  
+  ws.on('close', () => {
+    console.log('Client disconnected');
+  });
 });
 
 // Routes
@@ -84,6 +122,9 @@ app.post('/api/donations', async (req, res) => {
     await donation.save();
 
     // Send message to Telegram group
+    if (!process.env.TELEGRAM_GROUP_ID) {
+      throw new Error('TELEGRAM_GROUP_ID must be provided');
+    }
     await bot.telegram.sendMessage(process.env.TELEGRAM_GROUP_ID, 
       `New donation received: $${amount}\nMessage: ${message || 'No message'}`
     );
@@ -96,23 +137,18 @@ app.post('/api/donations', async (req, res) => {
 
 app.get('/api/donations', async (req, res) => {
   try {
-    const totalDonations = await Donation.aggregate([
-      { $group: { _id: null, total: { $sum: "$amount" } } }
-    ]);
-    const donorCount = await Donation.countDocuments();
-
+    const donations = await Donation.find();
+    const totalDonations = donations.reduce((acc, curr) => acc + curr.amount, 0);
+    const donorCount = donations.length;
+    
     res.json({
-      totalDonations: totalDonations[0]?.total || 0,
+      totalDonations,
       donorCount
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching donation data', error: error.message });
+    console.error('Error fetching donations:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
-});
-
-// Start server
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
 });
 
 // Graceful shutdown
