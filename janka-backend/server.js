@@ -34,12 +34,13 @@ app.use((req, res, next) => {
   next();
 });
 
-// MongoDB connection
-if (!process.env.MONGODB_URI) {
+// MongoDB connection setup
+const uri = process.env.MONGODB_URI || '';
+if (!uri) {
   throw new Error('MONGODB_URI must be provided');
 }
 
-const client = new MongoClient(process.env.MONGODB_URI, {
+const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
     strict: true,
@@ -50,15 +51,21 @@ const client = new MongoClient(process.env.MONGODB_URI, {
 async function connectToMongo() {
   try {
     await client.connect();
-    console.log("Connected to MongoDB Atlas");
+    // Send a ping to confirm connection
+    await client.db("admin").command({ ping: 1 });
+    console.log("Successfully connected to MongoDB!");
+    return client.db(); // Return the database instance
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
     process.exit(1);
   }
 }
 
-connectToMongo().then(() => {
-  console.log('Connected to MongoDB');
+// Initialize database connection before starting server
+connectToMongo().then((database) => {
+  // Store database instance
+  app.locals.db = database;
+  
   // Start server only after successful MongoDB connection
   server.listen(port, () => {
     console.log(`Server running on port ${port}`);
@@ -68,30 +75,16 @@ connectToMongo().then(() => {
   process.exit(1);
 });
 
-mongoose.connection.on('error', (err) => {
-  console.error('MongoDB connection error:', err);
-});
-
-mongoose.connection.on('disconnected', () => {
-  console.log('MongoDB disconnected');
-});
-
-// Handle process termination
+// Update the graceful shutdown handler
 process.on('SIGINT', async () => {
   try {
-    await mongoose.connection.close();
+    await client.close();
     console.log('MongoDB connection closed through app termination');
     process.exit(0);
   } catch (err) {
     console.error('Error during shutdown:', err);
     process.exit(1);
   }
-});
-
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'MongoDB connection error:'));
-db.once('open', () => {
-  console.log('Connected to MongoDB');
 });
 
 // Telegram bot setup
@@ -304,7 +297,7 @@ process.on('uncaughtException', (error) => {
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   try {
-    await mongoose.connection.close();
+    await client.close();
     console.log('MongoDB connection closed');
     process.exit(0);
   } catch (err) {
@@ -326,6 +319,7 @@ const options = {
   connectTimeoutMS: 30000,
 };
 
+// @ts-ignore
 mongoose.connect(process.env.MONGODB_URI, options)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
