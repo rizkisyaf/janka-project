@@ -202,7 +202,7 @@ export default function AnalyticsPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Contract Type Distribution</CardTitle>
-                  <CardDescription>Breakdown of contract types you've participated in</CardDescription>
+                  <CardDescription>Breakdown of contract types you&apos;ve participated in</CardDescription>
                 </CardHeader>
                 <CardContent className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">

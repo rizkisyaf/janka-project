@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -112,7 +112,7 @@ export default function EnhancedTradePage({
 
   const [probabilityVolumes, setProbabilityVolumes] = useState<ProbabilityVolume[]>(initialProbabilityVolumes)
 
-  const generateThresholdVolumes = (thresholds: EventDetails['thresholds']) => {
+  const generateThresholdVolumes = useCallback((thresholds: EventDetails['thresholds']) => {
     if (!thresholds) return initialProbabilityVolumes;
     
     return thresholds.flatMap((threshold, index) => 
@@ -122,13 +122,13 @@ export default function EnhancedTradePage({
         cap: 100000 + Math.random() * 100000
       }))
     );
-  };
+  }, [initialProbabilityVolumes]);
 
   useEffect(() => {
     if (eventDetails.type === 'threshold' && eventDetails.thresholds) {
       setProbabilityVolumes(generateThresholdVolumes(eventDetails.thresholds));
     }
-  }, [eventDetails.type, eventDetails.thresholds]);
+  }, [eventDetails.type, eventDetails.thresholds, generateThresholdVolumes]);
 
   const calculateTimeBasedMultiplier = () => {
     const now = new Date()
