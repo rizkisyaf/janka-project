@@ -316,20 +316,15 @@ process.on('SIGTERM', async () => {
 const options = {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  retryWrites: true,
-  w: "majority",
-  tls: true,
-  maxPoolSize: 10,
-  serverSelectionTimeoutMS: 5000,
+  serverSelectionTimeoutMS: 10000,
   socketTimeoutMS: 45000,
-  family: 4, // Use IPv4, skip trying IPv6
-  authSource: 'janka-admin',
+  family: 4,
+  retryWrites: true,
+  w: 1,
+  authSource: 'admin',
 };
 
-mongoose.connect(process.env.MONGODB_URI, {
-  ...options,
-  w: "majority"
-})
+mongoose.connect(process.env.MONGODB_URI, options)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
 
