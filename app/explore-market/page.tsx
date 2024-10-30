@@ -20,7 +20,7 @@ interface Market {
   type: ContractType;
   probability?: string;
   volume: string;
-  thresholds?: string[];
+  thresholds?: { value: string; options: string[] }[];
 }
 
 export default function ExploreMarketsPage() {
@@ -35,10 +35,25 @@ export default function ExploreMarketsPage() {
   ]
 
   const featuredMarkets: Market[] = [
-    { id: '1', name: 'US GDP Growth Q3 2024', category: 'finance', type: 'threshold', volume: '$1.2M', thresholds: ['Below 2%', '2% - 4%', 'Above 4%'] },
-    { id: '2', name: 'Hurricane Landfall Florida 2024', category: 'weather', type: 'binary', probability: '30%', volume: '$890K' },
-    { id: '3', name: 'Oil Price Above $80/barrel EOY', category: 'commodities', type: 'binary', probability: '75%', volume: '$2.5M' },
-    { id: '4', name: 'Renewable Energy Output EU Q4', category: 'energy', type: 'threshold', volume: '$1.8M', thresholds: ['Below 20%', '20% - 30%', 'Above 30%'] },
+    { 
+      id: '1', 
+      name: 'US GDP Growth Q3 2024', 
+      category: 'finance', 
+      type: 'threshold', 
+      volume: '$1.2M', 
+      thresholds: [
+        { value: '2%', options: ['above', 'below'] },
+        { value: '4%', options: ['above', 'below'] }
+      ]
+    },
+    { 
+      id: '2', 
+      name: 'Hurricane Landfall Florida 2024', 
+      category: 'weather', 
+      type: 'binary', 
+      probability: '30%', 
+      volume: '$890K' 
+    }
   ]
 
   const handleFooterSubscribe = async (e: React.FormEvent) => {
