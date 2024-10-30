@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     description: "Janka enables users to hedge against real-world, uninsurable events with transparency, precision, and oracle-verified data.",
     images: [
       {
-        url: "/public/banner.png",
+        url: "/banner.png",
         width: 1200,
         height: 630,
         alt: "Janka Banner",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     title: "Janka - Real-World Hedging Event Platform",
     card: "summary_large_image",
     description: "Janka enables users to hedge against real-world, uninsurable events with transparency, precision, and oracle-verified data.",
-    images: ["/public/banner.png"],
+    images: ["/banner.png"],
   }
 };
 
