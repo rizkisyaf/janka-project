@@ -1,39 +1,38 @@
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Github, Linkedin, Twitter } from 'lucide-react'
+import { Facebook, Github, Instagram, Linkedin, Twitter } from 'lucide-react'
 import Image from 'next/image'
 
 export default function JankaTeams() {
   const teamMembers = [
     {
-      name: "Your Name",
+      name: "Kisra Fistya",
       role: "Founder",
-      image: "/janka-logo.svg?height=300&width=300",
-      bio: "Experienced entrepreneur with a background in cafe management. Passionate about leveraging blockchain technology to revolutionize the insurance industry.",
+      image: "/fistya.svg",
+      bio: "Solopreneur with multiple background in philosophy. Passionate about leveraging blockchain technology to revolutionize the insurance industry.",
       social: {
-        twitter: "https://twitter.com/founder",
+        twitter: "https://twitter.com/kisra_fistya",
         linkedin: "https://linkedin.com/in/founder",
-        github: "https://github.com/founder"
+        github: "https://github.com/rizkisyaf"
       }
     },
     {
-      name: "Designer Name",
+      name: "Rezcio Narinda",
       role: "UI/UX Designer",
-      image: "/janka-logo.svg?height=300&width=300",
+      image: "/reza.svg",
       bio: "Creative designer with a keen eye for user-centric interfaces. Dedicated to making Janka's platform intuitive and visually appealing.",
       social: {
-        twitter: "https://twitter.com/designer",
-        linkedin: "https://linkedin.com/in/designer"
+        Instagram: "https://instagram.com/punyacio",
       }
     },
     {
-      name: "Mentor Name",
+      name: "Hari Wicahyoono",
       role: "Early Supporter & Mentor",
-      image: "/janka-logo.svg?height=300&width=300",
+      image: "/hari.svg",
       bio: "Seasoned industry veteran providing invaluable guidance and support to the Janka team. Committed to helping realize the vision of decentralized, event-based insurance.",
       social: {
-        linkedin: "https://linkedin.com/in/mentor"
+        Facebook: "https://linkedin.com/in/mentor"
       }
     }
   ]
@@ -43,7 +42,13 @@ export default function JankaTeams() {
       <header className="sticky top-0 z-50 w-full bg-white dark:bg-gray-800 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Image src="/janka-logo.svg?height=40&width=40" alt="Janka Logo" className="h-10 w-10" />
+            <Image
+              src="/janka-logo.svg" // Remove /public from the path
+              alt="Janka Logo"
+              width={40}  // Add explicit width
+              height={40} // Add explicit height
+              className="h-10 w-10"
+            />
             <span className="text-xl font-bold">Janka</span>
           </div>
           <Button>Get Started</Button>
@@ -62,7 +67,7 @@ export default function JankaTeams() {
           {teamMembers.map((member, index) => (
             <Card key={index} className="overflow-hidden">
               <CardHeader className="p-0">
-                <Image src={member.image} alt={member.name} className="w-full h-64 object-cover" />
+                <Image src={member.image} alt={member.name} width={300} height={300} className="w-full h-64 object-cover" />
               </CardHeader>
               <CardContent className="p-6">
                 <CardTitle className="text-2xl mb-2">{member.name}</CardTitle>
@@ -75,10 +80,10 @@ export default function JankaTeams() {
                       <span className="sr-only">Twitter</span>
                     </a>
                   )}
-                  {member.social.linkedin && (
+                  {member.social.Instagram && (
                     <a href={member.social.linkedin} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-primary">
-                      <Linkedin className="h-5 w-5" />
-                      <span className="sr-only">LinkedIn</span>
+                      <Instagram className="h-5 w-5" />
+                      <span className="sr-only">Instagram</span>
                     </a>
                   )}
                   {member.social.github && (

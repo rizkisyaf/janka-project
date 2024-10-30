@@ -17,6 +17,8 @@ import Link from 'next/link'
 import Sparkle from 'react-sparkle'
 import { useDonationQueue } from '@/app/hooks/useDonationQueue'
 import { useDonationTracker } from '../hooks/useDonationTracker'
+import { Toaster, toast } from 'react-hot-toast'
+import { showToast } from '@/components/ui/custom-toast'
 
 interface Notification {
   id: number;
@@ -112,21 +114,21 @@ export default function WaitlistPage() {
 
       if (response.data.success) {
         setShowSparkle(true)
-        alert('You have successfully joined the waitlist and subscribed to our newsletter!')
-        setEmail('') // Clear the input
+        showToast.success('Successfully joined waitlist! 🎉')
+        setEmail('')
         setTimeout(() => {
           setShowSparkle(false)
         }, 5000)
       } else {
-        alert(response.data.message || 'There was an error joining the waitlist')
+        showToast.error(response.data.message || 'There was an error joining the waitlist')
       }
     } catch (error) {
       console.error('Error joining waitlist:', error)
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 400) {
-          alert(error.response.data.message || 'Invalid request. Please try again.')
+          showToast.error(error.response.data.message || 'Invalid request')
         } else {
-          alert('There was an error joining the waitlist. Please try again.')
+          showToast.error('Failed to join waitlist. Please try again.')
         }
       }
     } finally {
@@ -207,6 +209,7 @@ export default function WaitlistPage() {
 
   return (
     <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
+      <Toaster />
       <style>{`
       @keyframes floatUp {
         0% {
