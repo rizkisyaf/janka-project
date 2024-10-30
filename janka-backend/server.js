@@ -25,7 +25,8 @@ app.use(cors({
   credentials: true,
   optionsSuccessStatus: 200
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Add request logging middleware
 app.use((req, res, next) => {
@@ -316,12 +317,13 @@ process.on('SIGTERM', async () => {
 const options = {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 10000,
+  serverSelectionTimeoutMS: 30000,
   socketTimeoutMS: 45000,
   family: 4,
   retryWrites: true,
   w: 1,
   authSource: 'admin',
+  connectTimeoutMS: 30000,
 };
 
 mongoose.connect(process.env.MONGODB_URI, options)

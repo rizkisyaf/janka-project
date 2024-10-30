@@ -100,14 +100,17 @@ export default function WaitlistPage() {
   const { publicKey, sendTransaction } = useWallet()
   const [showSparkle, setShowSparkle] = useState(false)
   const [footerEmail, setFooterEmail] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleJoinWaitlist = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsLoading(true)
     try {
-      const response = await axios.post('/api/waitlist', { email })
+      const response = await axios.post('/api/waitlist', { email }, {
+        timeout: 30000 // 30 seconds timeout
+      })
       console.log('Joined waitlist:', response.data)
 
-      // Only try newsletter if waitlist was successful
       if (response.data.success) {
         await axios.post('/api/newsletter', { email })
         setShowSparkle(true)
@@ -118,7 +121,13 @@ export default function WaitlistPage() {
       }
     } catch (error) {
       console.error('Error joining waitlist:', error)
-      alert('There was an error joining the waitlist. Please try again.')
+      if (axios.isAxiosError(error) && error.code === 'ECONNABORTED') {
+        alert('Request timed out. Please try again.')
+      } else {
+        alert('There was an error joining the waitlist. Please try again.')
+      }
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -283,8 +292,21 @@ export default function WaitlistPage() {
                     </div>
                   </div>
                   <CardFooter className="px-0 pb-0">
-                    <Button type="submit" className="w-full">
-                      Join Waitlist <ArrowRight className="ml-2 h-4 w-4" />
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <span className="animate-spin mr-2">⭕</span>
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          Join Waitlist <ArrowRight className="ml-2 h-4 w-4" />
+                        </>
+                      )}
                     </Button>
                   </CardFooter>
                 </form>
