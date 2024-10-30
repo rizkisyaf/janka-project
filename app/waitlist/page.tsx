@@ -107,24 +107,27 @@ export default function WaitlistPage() {
     setIsLoading(true)
     try {
       const response = await axios.post('/api/waitlist', { email }, {
-        timeout: 30000 // 30 seconds timeout
-      })
-      console.log('Joined waitlist:', response.data)
+        timeout: 30000
+      });
 
       if (response.data.success) {
-        await axios.post('/api/newsletter', { email })
         setShowSparkle(true)
         alert('You have successfully joined the waitlist and subscribed to our newsletter!')
+        setEmail('') // Clear the input
         setTimeout(() => {
           setShowSparkle(false)
         }, 5000)
+      } else {
+        alert(response.data.message || 'There was an error joining the waitlist')
       }
     } catch (error) {
       console.error('Error joining waitlist:', error)
-      if (axios.isAxiosError(error) && error.code === 'ECONNABORTED') {
-        alert('Request timed out. Please try again.')
-      } else {
-        alert('There was an error joining the waitlist. Please try again.')
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 400) {
+          alert(error.response.data.message || 'Invalid request. Please try again.')
+        } else {
+          alert('There was an error joining the waitlist. Please try again.')
+        }
       }
     } finally {
       setIsLoading(false)

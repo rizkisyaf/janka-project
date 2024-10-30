@@ -35,7 +35,7 @@ app.use((req, res, next) => {
 });
 
 // MongoDB connection setup
-const uri = process.env.MONGODB_URI || '';
+const uri = process.env.MONGODB_URI;
 if (!uri) {
   throw new Error('MONGODB_URI must be provided');
 }
@@ -45,35 +45,43 @@ const client = new MongoClient(uri, {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
+  ssl: true,
+  tls: true,
+  tlsAllowInvalidCertificates: false,
+  tlsAllowInvalidHostnames: false,
+  monitorCommands: true,
 });
+
+// Add debug event listener
+client.on('commandStarted', (event) => console.debug('MongoDB Command Started:', event));
+client.on('commandSucceeded', (event) => console.debug('MongoDB Command Succeeded:', event));
+client.on('commandFailed', (event) => console.debug('MongoDB Command Failed:', event));
 
 async function connectToMongo() {
   try {
     await client.connect();
-    // Send a ping to confirm connection
     await client.db("admin").command({ ping: 1 });
     console.log("Successfully connected to MongoDB!");
-    return client.db(); // Return the database instance
+    return client.db();
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
-    process.exit(1);
+    throw error;
   }
 }
 
 // Initialize database connection before starting server
-connectToMongo().then((database) => {
-  // Store database instance
-  app.locals.db = database;
-  
-  // Start server only after successful MongoDB connection
-  server.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+connectToMongo()
+  .then((database) => {
+    app.locals.db = database;
+    server.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+    });
+  })
+  .catch((err) => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
   });
-}).catch((err) => {
-  console.error('MongoDB connection error:', err);
-  process.exit(1);
-});
 
 // Update the graceful shutdown handler
 process.on('SIGINT', async () => {
@@ -145,18 +153,32 @@ app.post('/api/waitlist', async (req, res) => {
 
     // Validate email
     if (!validator.isEmail(email)) {
-      return res.status(400).json({ message: 'Invalid email format' });
+      return res.status(400).json({ success: false, message: 'Invalid email format' });
     }
 
-    // Check for existing email
+    // Check for existing email in waitlist
     const existingUser = await Waitlist.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: 'Email already exists in the waitlist' });
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email already exists in the waitlist' 
+      });
     }
 
-    // Save to database
+    // Save to waitlist
     const waitlistEntry = new Waitlist({ email });
     await waitlistEntry.save();
+
+    // Try to save to newsletter, ignore if already exists
+    try {
+      const newsletterEntry = new Newsletter({ email });
+      await newsletterEntry.save();
+    } catch (newsletterError) {
+      // Ignore duplicate key errors for newsletter
+      if (newsletterError.code !== 11000) {
+        console.error('Newsletter subscription error:', newsletterError);
+      }
+    }
 
     // Send confirmation email
     await transporter.sendMail({
@@ -173,10 +195,17 @@ app.post('/api/waitlist', async (req, res) => {
       `
     });
 
-    res.status(201).json({ message: 'Successfully joined the waitlist' });
+    res.status(201).json({ 
+      success: true, 
+      message: 'Successfully joined the waitlist and subscribed to newsletter' 
+    });
   } catch (error) {
     console.error('Waitlist error:', error);
-    return res.status(500).json({ success: false, message: 'Error joining waitlist' });
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Error joining waitlist',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
