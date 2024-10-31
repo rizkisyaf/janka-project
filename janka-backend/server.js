@@ -53,7 +53,7 @@ app.use(cors({
   origin: process.env.NODE_ENV === 'production'
     ? ['https://janka-project.vercel.app']
     : ['http://localhost:3000'],
-  methods: ['GET', 'POST', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
   optionsSuccessStatus: 200
 }));
@@ -469,6 +469,34 @@ app.post('/api/donations', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error processing donation',
+      error: process.env.NODE_ENV === 'production' ? undefined : error.message
+    });
+  }
+});
+
+// Add GET endpoint for donations
+app.get('/api/donations', async (req, res) => {
+  try {
+    if (!await waitForConnection()) {
+      throw new Error('Database connection not ready');
+    }
+
+    const totalDonations = await Donation.aggregate([
+      { $group: { _id: null, total: { $sum: "$amount" } } }
+    ]);
+
+    const donorCount = await Donation.countDocuments();
+
+    res.json({
+      success: true,
+      totalDonations: totalDonations[0]?.total || 0,
+      donorCount
+    });
+  } catch (error) {
+    console.error('Error fetching donations:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching donation data',
       error: process.env.NODE_ENV === 'production' ? undefined : error.message
     });
   }

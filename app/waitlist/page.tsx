@@ -10,7 +10,7 @@ import { ArrowRight, Coins, Users, Sun, Moon, MessageCircle, Target, CheckCircle
 import Image from 'next/image'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
-import { PublicKey, Transaction } from '@solana/web3.js'
+import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { createTransferInstruction } from '@solana/spl-token'
 import axios from 'axios'
 import Link from 'next/link'
@@ -150,44 +150,47 @@ export default function WaitlistPage() {
   } = useDonationTracker()
 
   const handleDonation = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!publicKey) {
-      alert('Please connect your wallet first.')
-      return
+      showToast.error('Please connect your wallet first.');
+      return;
     }
 
-    let ws: WebSocket | null = null
     try {
-      ws = connectToWebSocket()
+      const transaction = new Transaction();
+      const recipientPublicKey = new PublicKey('4TSJPLqvzfejeh2fPdXnUs8sFnfSQ2qSs2N4WYzA9usK');
+      
+      // Create a native SOL transfer instruction
+      const transferInstruction = SystemProgram.transfer({
+        fromPubkey: publicKey,
+        toPubkey: recipientPublicKey,
+        lamports: BigInt(Math.floor(Number(donationAmount) * LAMPORTS_PER_SOL))
+      });
 
-      const transaction = new Transaction()
-      const recipientPublicKey = new PublicKey('4TSJPLqvzfejeh2fPdXnUs8sFnfSQ2qSs2N4WYzA9usK')
-      const transferInstruction = createTransferInstruction(
-        publicKey,
-        recipientPublicKey,
-        publicKey,
-        BigInt(Math.floor(Number(donationAmount) * 1e9))
-      )
-      transaction.add(transferInstruction)
+      transaction.add(transferInstruction);
 
-      const signature = await sendTransaction(transaction, connection)
-      await connection.confirmTransaction(signature, 'confirmed')
+      const signature = await sendTransaction(transaction, connection);
+      const confirmation = await connection.confirmTransaction(signature, 'confirmed');
 
-      await axios.post('/api/donations', {
-        amount: Number(donationAmount),
-        message
-      })
-
-      if (ws) {
-        setTimeout(() => ws?.close(), 5000)
+      if (confirmation.value.err) {
+        throw new Error('Transaction failed');
       }
 
-      alert('Thank you for your donation!')
+      // Only make the API call if the transaction succeeded
+      await axios.post('/api/donations', {
+        amount: Number(donationAmount),
+        message,
+        signature
+      });
+
+      showToast.success('Thank you for your donation! 🎉');
+      setDonationAmount('');
+      setMessage('');
     } catch (error) {
-      console.error('Error processing donation:', error)
-      alert('There was an error processing your donation. Please try again.')
+      console.error('Error processing donation:', error);
+      showToast.error('Failed to process donation. Please try again.');
     }
-  }
+  };
 
   const handleFooterSubscribe = async (e: React.FormEvent) => {
     e.preventDefault()
