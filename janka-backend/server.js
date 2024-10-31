@@ -46,7 +46,11 @@ const client = new MongoClient(uri, {
     strict: true,
     deprecationErrors: true,
   },
-  ssl: true,
+  retryWrites: true,
+  w: 'majority',
+  replicaSet: 'atlas-xh3z3h-shard-0',
+  authSource: 'admin',
+  directConnection: false,
   tls: true,
   tlsAllowInvalidCertificates: false,
   tlsAllowInvalidHostnames: false,
@@ -60,12 +64,46 @@ client.on('commandFailed', (event) => console.debug('MongoDB Command Failed:', e
 
 async function connectToMongo() {
   try {
-    await client.connect();
-    await client.db("admin").command({ ping: 1 });
-    console.log("Successfully connected to MongoDB!");
-    return client.db();
+    const MAX_RETRIES = 3;
+    let retryCount = 0;
+    
+    while (retryCount < MAX_RETRIES) {
+      try {
+        await client.connect();
+        const db = client.db();
+        
+        await db.command({ ping: 1 });
+        console.log("Successfully connected to MongoDB!");
+        
+        // Set up connection monitoring
+        client.on('serverHeartbeatFailed', (event) => {
+          console.error('MongoDB heartbeat failed:', event);
+        });
+
+        client.on('topologyOpening', () => {
+          console.log('MongoDB topology opening...');
+        });
+
+        client.on('topologyClosed', () => {
+          console.log('MongoDB topology closed');
+        });
+
+        return db;
+      } catch (error) {
+        retryCount++;
+        console.error(`MongoDB connection attempt ${retryCount} failed:`, error);
+        
+        if (retryCount === MAX_RETRIES) {
+          throw new Error(`Failed to connect after ${MAX_RETRIES} attempts`);
+        }
+        
+        await new Promise(resolve => 
+          setTimeout(resolve, Math.pow(2, retryCount) * 1000)
+        );
+      }
+    }
   } catch (error) {
-    console.error("Error connecting to MongoDB:", error);
+    console.error("Final MongoDB connection error:", error);
     throw error;
   }
 }
@@ -489,22 +527,40 @@ process.on('SIGTERM', async () => {
 });
 
 // Add connection options for better security
-const options = {
+const mongooseOptions = {
+  retryWrites: true,
+  w: 1,
+  replicaSet: 'atlas-xh3z3h-shard-0',
+  authSource: 'admin',
+  directConnection: false,
+  tls: true,
+  tlsAllowInvalidCertificates: false,
+  tlsAllowInvalidHostnames: false,
+  bufferCommands: false,
+  autoCreate: false,
   useNewUrlParser: true,
   useUnifiedTopology: true,
   serverSelectionTimeoutMS: 30000,
   socketTimeoutMS: 45000,
-  family: 4,
-  retryWrites: true,
-  w: 1,
-  authSource: 'admin',
-  connectTimeoutMS: 30000,
+  family: 4
 };
 
-// @ts-ignore
-mongoose.connect(process.env.MONGODB_URI, options)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+mongoose.connect(uri, mongooseOptions)
+  .then(() => console.log('Mongoose connected to MongoDB'))
+  .catch(err => console.error('Mongoose connection error:', err));
+
+// Add these new event handlers (after line 520)
+mongoose.connection.on('connecting', () => {
+  console.log('Mongoose connecting to MongoDB...');
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('Mongoose connection error:', err);
+  if (err.name === 'MongoServerSelectionError') {
+    console.log('Attempting to reconnect...');
+    mongoose.connect(uri, mongooseOptions);
+  }
+});
 
 // Add connection monitoring
 mongoose.connection.on('connected', () => {
