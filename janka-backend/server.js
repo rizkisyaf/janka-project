@@ -210,10 +210,9 @@ async function waitForConnection(maxRetries = 5) {
 connectToMongo()
   .then((database) => {
     app.locals.db = database;
-
-    // Define routes here
-    // @ts-ignore
+    
     app.options('/api/feedback', cors()); // Enable pre-flight request for POST
+    // @ts-ignore
     app.post('/api/feedback', async (req, res) => {
       try {
         if (!await waitForConnection()) {
