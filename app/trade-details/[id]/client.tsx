@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -56,6 +56,15 @@ const generateThresholdVolumes = (thresholds: EventDetails['thresholds'], initia
   );
 };
 
+// Move this outside the component
+const BASE_PROBABILITY_VOLUMES: ProbabilityVolume[] = [
+  { probability: 0.1, volume: 50000, cap: 10000 },
+  { probability: 0.3, volume: 75000, cap: 15000 },
+  { probability: 0.5, volume: 100000, cap: 20000 },
+  { probability: 0.7, volume: 15000, cap: 50000 },
+  { probability: 0.9, volume: 10000, cap: 200000 },
+];
+
 export default function EnhancedTradePage({
   params,
   searchParams,
@@ -89,15 +98,8 @@ export default function EnhancedTradePage({
   const [selectedPosition, setSelectedPosition] = useState<'yes' | 'no'>('yes');
   const [selectedOption, setSelectedOption] = useState<'above' | 'below'>('above');
 
-  const initialProbabilityVolumes: ProbabilityVolume[] = [
-    { probability: 0.1, volume: 50000, cap: 10000 },
-    { probability: 0.3, volume: 75000, cap: 15000 },
-    { probability: 0.5, volume: 100000, cap: 20000 },
-    { probability: 0.7, volume: 15000, cap: 50000 },
-    { probability: 0.9, volume: 10000, cap: 200000 },
-  ]
-
-  const [probabilityVolumes, setProbabilityVolumes] = useState<ProbabilityVolume[]>(initialProbabilityVolumes)
+  const initialProbabilityVolumes = useMemo(() => BASE_PROBABILITY_VOLUMES, []);
+  const [probabilityVolumes, setProbabilityVolumes] = useState<ProbabilityVolume[]>(initialProbabilityVolumes);
 
   // Update the useEffect that sets event details
   useEffect(() => {
