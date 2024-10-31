@@ -18,8 +18,8 @@ const server = require('http').createServer(app);
 
 // Middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://janka-project.vercel.app'] 
+  origin: process.env.NODE_ENV === 'production'
+    ? ['https://janka-project.vercel.app']
     : ['http://localhost:3000'],
   methods: ['GET', 'POST'],
   credentials: true,
@@ -64,40 +64,45 @@ client.on('commandFailed', (event) => console.debug('MongoDB Command Failed:', e
 
 async function connectToMongo() {
   try {
+    if (!uri) {
+      throw new Error('MONGODB_URI must be provided');
+    }
+
     const MAX_RETRIES = 3;
     let retryCount = 0;
-    
+
     while (retryCount < MAX_RETRIES) {
       try {
+        // Connect MongoDB client
         await client.connect();
         const db = client.db();
-        
         await db.command({ ping: 1 });
+
+        // Connect Mongoose with the validated uri
+        await mongoose.connect(uri, {
+          retryWrites: true,
+          w: 1,
+          replicaSet: 'atlas-xh3z3h-shard-0',
+          authSource: 'admin',
+          directConnection: false,
+          tls: true,
+          tlsAllowInvalidCertificates: false,
+          tlsAllowInvalidHostnames: false,
+          bufferCommands: true,
+          autoCreate: false
+        });
+
         console.log("Successfully connected to MongoDB!");
-        
-        // Set up connection monitoring
-        client.on('serverHeartbeatFailed', (event) => {
-          console.error('MongoDB heartbeat failed:', event);
-        });
-
-        client.on('topologyOpening', () => {
-          console.log('MongoDB topology opening...');
-        });
-
-        client.on('topologyClosed', () => {
-          console.log('MongoDB topology closed');
-        });
-
         return db;
       } catch (error) {
         retryCount++;
         console.error(`MongoDB connection attempt ${retryCount} failed:`, error);
-        
+
         if (retryCount === MAX_RETRIES) {
           throw new Error(`Failed to connect after ${MAX_RETRIES} attempts`);
         }
-        
-        await new Promise(resolve => 
+
+        await new Promise(resolve =>
           setTimeout(resolve, Math.pow(2, retryCount) * 1000)
         );
       }
@@ -154,8 +159,8 @@ const newsletterSchema = new mongoose.Schema({
 const Newsletter = mongoose.model('Newsletter', newsletterSchema);
 
 const donationSchema = new mongoose.Schema({
-  amount: { 
-    type: Number, 
+  amount: {
+    type: Number,
     required: true,
     min: 0,
     comment: 'Amount in SOL'
@@ -179,7 +184,7 @@ const wss = new WebSocket.Server({ server });
 
 wss.on('connection', (ws) => {
   console.log('Client connected');
-  
+
   ws.on('close', () => {
     console.log('Client disconnected');
   });
@@ -211,9 +216,9 @@ app.post('/api/waitlist', async (req, res) => {
     // Check for existing email in waitlist
     const existingUser = await Waitlist.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Email already exists in the waitlist' 
+      return res.status(400).json({
+        success: false,
+        message: 'Email already exists in the waitlist'
       });
     }
 
@@ -285,14 +290,14 @@ app.post('/api/waitlist', async (req, res) => {
       `
     });
 
-    res.status(201).json({ 
-      success: true, 
-      message: 'Successfully joined the waitlist and subscribed to newsletter' 
+    res.status(201).json({
+      success: true,
+      message: 'Successfully joined the waitlist and subscribed to newsletter'
     });
   } catch (error) {
     console.error('Waitlist error:', error);
-    return res.status(500).json({ 
-      success: false, 
+    return res.status(500).json({
+      success: false,
       message: 'Error joining waitlist',
       error: process.env.NODE_ENV === 'production' ? undefined : error.message
     });
@@ -318,11 +323,11 @@ app.post('/api/newsletter', async (req, res) => {
 app.post('/api/donations', async (req, res) => {
   try {
     const { amount, message } = req.body;
-    
+
     if (amount <= 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Invalid donation amount' 
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid donation amount'
       });
     }
 
@@ -356,7 +361,7 @@ app.post('/api/donations', async (req, res) => {
       }
     });
 
-    res.status(201).json({ 
+    res.status(201).json({
       success: true,
       message: 'Donation received successfully',
       amount: amount,
@@ -364,10 +369,10 @@ app.post('/api/donations', async (req, res) => {
     });
   } catch (error) {
     console.error('Donation error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: 'Error processing donation', 
-      error: process.env.NODE_ENV === 'production' ? undefined : error.message 
+      message: 'Error processing donation',
+      error: process.env.NODE_ENV === 'production' ? undefined : error.message
     });
   }
 });
@@ -380,7 +385,7 @@ app.get('/api/donations', async (req, res) => {
     }
 
     const donations = await Donation.find().lean();
-    
+
     if (!donations) {
       return res.status(200).json({
         totalDonations: 0,
@@ -395,7 +400,7 @@ app.get('/api/donations', async (req, res) => {
     const donorCount = donations.length;
     const targetAmount = 200;
     const progressPercentage = (totalDonations / targetAmount) * 100;
-    
+
     res.json({
       totalDonations,
       donorCount,
@@ -406,7 +411,7 @@ app.get('/api/donations', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching donations:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       error: 'Internal server error',
       message: error.message,
@@ -419,12 +424,12 @@ app.get('/api/donations', async (req, res) => {
 app.post('/api/feedback', async (req, res) => {
   try {
     const { answers } = req.body;
-    
+
     // Validate answers
     if (!Array.isArray(answers)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Invalid feedback format' 
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid feedback format'
       });
     }
 
@@ -442,31 +447,30 @@ app.post('/api/feedback', async (req, res) => {
     );
 
     // Send notification to Telegram
-    const telegramMessage = `📊 New Feedback Received!\n\n${
-      answers.map(a => 
-        `Q: ${a.question}\nA: ${a.customAnswer || a.answer}`
-      ).join('\n\n')
-    }`;
+    const telegramMessage = `📊 New Feedback Received!\n\n${answers.map(a =>
+      `Q: ${a.question}\nA: ${a.customAnswer || a.answer}`
+    ).join('\n\n')
+      }`;
 
     try {
       await bot.telegram.sendMessage(
-        String(process.env.TELEGRAM_GROUP_ID), 
-        telegramMessage, 
+        String(process.env.TELEGRAM_GROUP_ID),
+        telegramMessage,
         { parse_mode: 'HTML' }
       );
     } catch (telegramError) {
       console.error('Failed to send Telegram notification:', telegramError);
     }
 
-    res.status(201).json({ 
-      success: true, 
+    res.status(201).json({
+      success: true,
       message: 'Feedback received successfully',
       data: savedFeedback
     });
   } catch (error) {
     console.error('Feedback error:', error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       message: 'Error processing feedback',
       error: process.env.NODE_ENV === 'production' ? undefined : error.message
     });
@@ -558,7 +562,7 @@ mongoose.connection.on('error', (err) => {
   console.error('Mongoose connection error:', err);
   if (err.name === 'MongoServerSelectionError') {
     console.log('Attempting to reconnect...');
-    mongoose.connect(uri, mongooseOptions);
+    connectToMongo().catch(console.error);
   }
 });
 
