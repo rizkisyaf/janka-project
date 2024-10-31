@@ -24,7 +24,10 @@ if (!process.env.TELEGRAM_BOT_TOKEN) {
   throw new Error('TELEGRAM_BOT_TOKEN must be provided');
 }
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
-bot.launch();
+bot.launch().catch(error => {
+  console.error('Telegram bot launch error:', error);
+  // Continue running the server even if Telegram bot fails
+});
 if (!process.env.TELEGRAM_GROUP_ID) {
   throw new Error('TELEGRAM_GROUP_ID must be provided');
 }
@@ -210,6 +213,7 @@ connectToMongo()
 
     // Define routes here
     // @ts-ignore
+    app.options('/api/feedback', cors()); // Enable pre-flight request for POST
     app.post('/api/feedback', async (req, res) => {
       try {
         if (!await waitForConnection()) {
@@ -252,6 +256,7 @@ connectToMongo()
           );
         } catch (telegramError) {
           console.error('Failed to send Telegram notification:', telegramError);
+          // Don't throw error, continue processing
         }
 
         res.status(201).json({
@@ -593,7 +598,7 @@ app.use((req, res) => {
 // Add robust error handling
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  // Application specific logging, throwing an error, or other logic here
+  // Log but don't exit
 });
 
 process.on('uncaughtException', (error) => {
