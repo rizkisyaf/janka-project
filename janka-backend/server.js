@@ -53,7 +53,7 @@ app.use(cors({
   origin: process.env.NODE_ENV === 'production'
     ? ['https://janka-project.vercel.app']
     : ['http://localhost:3000'],
-  methods: ['GET', 'POST'],
+  methods: ['GET', 'POST', 'OPTIONS'],
   credentials: true,
   optionsSuccessStatus: 200
 }));
@@ -206,121 +206,116 @@ async function waitForConnection(maxRetries = 5) {
   return false;
 }
 
-// Initialize database connection before starting server
-connectToMongo()
-  .then((database) => {
-    app.locals.db = database;
+app.options('/api/feedback', cors()); // Enable pre-flight request for POST
+// @ts-ignore
+app.post('/api/feedback', async (req, res) => {
+  try {
+    if (!await waitForConnection()) {
+      throw new Error('Database connection not ready');
+    }
+    const { answers } = req.body;
 
-    app.options('/api/feedback', cors()); // Enable pre-flight request for POST
-    // @ts-ignore
-    app.post('/api/feedback', async (req, res) => {
-      try {
-        if (!await waitForConnection()) {
-          throw new Error('Database connection not ready');
-        }
-        const { answers } = req.body;
+    // Validate answers
+    if (!Array.isArray(answers)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid feedback format'
+      });
+    }
 
-        // Validate answers
-        if (!Array.isArray(answers)) {
-          return res.status(400).json({
-            success: false,
-            message: 'Invalid feedback format'
-          });
-        }
-
-        // Save each answer
-        const savedFeedback = await Promise.all(
-          answers.map(async (answer) => {
-            const feedback = new Feedback({
-              questionId: answer.questionId,
-              question: answer.question,
-              answer: answer.answer,
-              customAnswer: answer.customAnswer
-            });
-            return await feedback.save();
-          })
-        );
-
-        // Send notification to Telegram
-        const telegramMessage = `📊 New Feedback Received!\n\n${answers.map(a =>
-          `Q: ${a.question}\nA: ${a.customAnswer || a.answer}`
-        ).join('\n\n')
-          }`;
-
-        try {
-          await bot.telegram.sendMessage(
-            String(process.env.TELEGRAM_GROUP_ID),
-            telegramMessage,
-            { parse_mode: 'HTML' }
-          );
-        } catch (telegramError) {
-          console.error('Failed to send Telegram notification:', telegramError);
-          // Don't throw error, continue processing
-        }
-
-        res.status(201).json({
-          success: true,
-          message: 'Feedback received successfully',
-          data: savedFeedback
+    // Save each answer
+    const savedFeedback = await Promise.all(
+      answers.map(async (answer) => {
+        const feedback = new Feedback({
+          questionId: answer.questionId,
+          question: answer.question,
+          answer: answer.answer,
+          customAnswer: answer.customAnswer
         });
-      } catch (error) {
-        console.error('Feedback error:', error);
-        res.status(500).json({
-          success: false,
-          message: 'Error processing feedback',
-          error: process.env.NODE_ENV === 'production' ? undefined : error.message
-        });
-      }
+        return await feedback.save();
+      })
+    );
+
+    // Send notification to Telegram
+    const telegramMessage = `📊 New Feedback Received!\n\n${answers.map(a =>
+      `Q: ${a.question}\nA: ${a.customAnswer || a.answer}`
+    ).join('\n\n')
+      }`;
+
+    try {
+      await bot.telegram.sendMessage(
+        String(process.env.TELEGRAM_GROUP_ID),
+        telegramMessage,
+        { parse_mode: 'HTML' }
+      );
+    } catch (telegramError) {
+      console.error('Failed to send Telegram notification:', telegramError);
+      // Don't throw error, continue processing
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Feedback received successfully',
+      data: savedFeedback
     });
+  } catch (error) {
+    console.error('Feedback error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error processing feedback',
+      error: process.env.NODE_ENV === 'production' ? undefined : error.message
+    });
+  }
+});
 
-    // @ts-ignore
-    app.post('/api/waitlist', async (req, res) => {
-      try {
-        if (!await waitForConnection()) {
-          throw new Error('Database connection not ready');
-        }
+// @ts-ignore
+app.post('/api/waitlist', async (req, res) => {
+  try {
+    if (!await waitForConnection()) {
+      throw new Error('Database connection not ready');
+    }
 
-        const { email } = req.body;
+    const { email } = req.body;
 
-        if (!email) {
-          return res.status(400).json({ success: false, message: 'Email is required' });
-        }
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
 
-        // Validate email
-        if (!validator.isEmail(email)) {
-          return res.status(400).json({ success: false, message: 'Invalid email format' });
-        }
+    // Validate email
+    if (!validator.isEmail(email)) {
+      return res.status(400).json({ success: false, message: 'Invalid email format' });
+    }
 
-        // Check for existing email in waitlist
-        const existingUser = await Waitlist.findOne({ email });
-        if (existingUser) {
-          return res.status(400).json({
-            success: false,
-            message: 'Email already exists in the waitlist'
-          });
-        }
+    // Check for existing email in waitlist
+    const existingUser = await Waitlist.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email already exists in the waitlist'
+      });
+    }
 
-        // Save to waitlist
-        const waitlistEntry = new Waitlist({ email });
-        await waitlistEntry.save();
+    // Save to waitlist
+    const waitlistEntry = new Waitlist({ email });
+    await waitlistEntry.save();
 
-        // Try to save to newsletter, ignore if already exists
-        try {
-          const newsletterEntry = new Newsletter({ email });
-          await newsletterEntry.save();
-        } catch (newsletterError) {
-          // Ignore duplicate key errors for newsletter
-          if (newsletterError.code !== 11000) {
-            console.error('Newsletter subscription error:', newsletterError);
-          }
-        }
+    // Try to save to newsletter, ignore if already exists
+    try {
+      const newsletterEntry = new Newsletter({ email });
+      await newsletterEntry.save();
+    } catch (newsletterError) {
+      // Ignore duplicate key errors for newsletter
+      if (newsletterError.code !== 11000) {
+        console.error('Newsletter subscription error:', newsletterError);
+      }
+    }
 
-        // Send confirmation email
-        await transporter.sendMail({
-          from: process.env.SMTP_USER,
-          to: email,
-          subject: 'Welcome to the Future of Insurance with Janka! 🚀',
-          html: `
+    // Send confirmation email
+    await transporter.sendMail({
+      from: process.env.SMTP_USER,
+      to: email,
+      subject: 'Welcome to the Future of Insurance with Janka! 🚀',
+      html: `
         <!DOCTYPE html>
         <html>
           <body style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -366,102 +361,106 @@ connectToMongo()
           </body>
         </html>
       `
-        });
-
-        res.status(201).json({
-          success: true,
-          message: 'Successfully joined the waitlist and subscribed to newsletter'
-        });
-      } catch (error) {
-        console.error('Waitlist error:', error);
-        return res.status(500).json({
-          success: false,
-          message: 'Error joining waitlist',
-          error: process.env.NODE_ENV === 'production' ? undefined : error.message
-        });
-      }
     });
 
-    app.post('/api/newsletter', async (req, res) => {
-      try {
-        if (!await waitForConnection()) {
-          throw new Error('Database connection not ready');
-        }
-        const { email } = req.body;
-        const newsletterEntry = new Newsletter({ email });
-        await newsletterEntry.save();
-        res.status(201).json({ message: 'Successfully subscribed to the newsletter' });
-      } catch (error) {
-        if (error.code === 11000) {
-          res.status(400).json({ message: 'Email already subscribed to the newsletter' });
-        } else {
-          res.status(500).json({ message: 'Error subscribing to newsletter', error: error.message });
-        }
-      }
+    res.status(201).json({
+      success: true,
+      message: 'Successfully joined the waitlist and subscribed to newsletter'
     });
+  } catch (error) {
+    console.error('Waitlist error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error joining waitlist',
+      error: process.env.NODE_ENV === 'production' ? undefined : error.message
+    });
+  }
+});
 
-    // @ts-ignore
-    app.post('/api/donations', async (req, res) => {
-      try {
-        if (!await waitForConnection()) {
-          throw new Error('Database connection not ready');
-        }
+app.post('/api/newsletter', async (req, res) => {
+  try {
+    if (!await waitForConnection()) {
+      throw new Error('Database connection not ready');
+    }
+    const { email } = req.body;
+    const newsletterEntry = new Newsletter({ email });
+    await newsletterEntry.save();
+    res.status(201).json({ message: 'Successfully subscribed to the newsletter' });
+  } catch (error) {
+    if (error.code === 11000) {
+      res.status(400).json({ message: 'Email already subscribed to the newsletter' });
+    } else {
+      res.status(500).json({ message: 'Error subscribing to newsletter', error: error.message });
+    }
+  }
+});
 
-        const { amount, message } = req.body;
+// @ts-ignore
+app.post('/api/donations', async (req, res) => {
+  try {
+    if (!await waitForConnection()) {
+      throw new Error('Database connection not ready');
+    }
 
-        if (amount <= 0) {
-          return res.status(400).json({
-            success: false,
-            message: 'Invalid donation amount'
-          });
-        }
+    const { amount, message } = req.body;
 
-        const donation = new Donation({ amount, message });
-        await donation.save();
+    if (amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid donation amount'
+      });
+    }
 
-        // Format the message
-        const telegramMessage = `🎉 New Donation Received!\n\n` +
-          `Amount: ${amount} SOL\n` +
-          `Message: ${message || 'No message'}\n` +
-          `Time: ${new Date().toISOString()}`;
+    const donation = new Donation({ amount, message });
+    await donation.save();
 
-        try {
-          await bot.telegram.sendMessage(String(process.env.TELEGRAM_GROUP_ID), telegramMessage, {
-            parse_mode: 'HTML',
-            disable_notification: false
-          });
-        } catch (telegramError) {
-          // Log the error but don't fail the donation
-          console.error('Failed to send Telegram notification:', telegramError);
-          // Continue processing the donation
-        }
+    // Format the message
+    const telegramMessage = `🎉 New Donation Received!\n\n` +
+      `Amount: ${amount} SOL\n` +
+      `Message: ${message || 'No message'}\n` +
+      `Time: ${new Date().toISOString()}`;
 
-        wss.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({
-              type: 'donation',
-              amount: amount,
-              currency: 'SOL'
-            }));
-          }
-        });
+    try {
+      await bot.telegram.sendMessage(String(process.env.TELEGRAM_GROUP_ID), telegramMessage, {
+        parse_mode: 'HTML',
+        disable_notification: false
+      });
+    } catch (telegramError) {
+      // Log the error but don't fail the donation
+      console.error('Failed to send Telegram notification:', telegramError);
+      // Continue processing the donation
+    }
 
-        res.status(201).json({
-          success: true,
-          message: 'Donation received successfully',
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({
+          type: 'donation',
           amount: amount,
           currency: 'SOL'
-        });
-      } catch (error) {
-        console.error('Donation error:', error);
-        res.status(500).json({
-          success: false,
-          message: 'Error processing donation',
-          error: process.env.NODE_ENV === 'production' ? undefined : error.message
-        });
+        }));
       }
     });
 
+    res.status(201).json({
+      success: true,
+      message: 'Donation received successfully',
+      amount: amount,
+      currency: 'SOL'
+    });
+  } catch (error) {
+    console.error('Donation error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error processing donation',
+      error: process.env.NODE_ENV === 'production' ? undefined : error.message
+    });
+  }
+});
+
+// Initialize database connection before starting server
+connectToMongo()
+  .then((database) => {
+    app.locals.db = database;
     // Error handlers should also be inside
     // @ts-ignore
     app.use((err, req, res, next) => {
