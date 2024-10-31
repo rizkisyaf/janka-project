@@ -5,6 +5,7 @@ import "./globals.css";
 import WalletProviderClient from "../components/WalletProviderClient";
 import FeedbackWidget from '@/components/FeedbackWidget'
 import { criticalCSS } from '@/app/utils/criticalCSS'
+import StylesheetLoader from '@/components/StylesheetLoader'
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -60,17 +61,7 @@ export default function RootLayout({
         <style dangerouslySetInnerHTML={{ __html: criticalCSS }} />
         <link rel="preload" href="./fonts/GeistVF.woff" as="font" type="font/woff" crossOrigin="anonymous" />
         <link rel="preload" href="./fonts/GeistMonoVF.woff" as="font" type="font/woff" crossOrigin="anonymous" />
-        <link 
-          rel="stylesheet" 
-          href="/globals.css"
-          media="print"
-          onLoad={() => {
-            const link = document.querySelector('link[rel="stylesheet"]') as HTMLLinkElement;
-            if (link) {
-              link.media = 'all';
-            }
-          }}
-        />
+        <StylesheetLoader />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <WalletProviderClient>{children}</WalletProviderClient>

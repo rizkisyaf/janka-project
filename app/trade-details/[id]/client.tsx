@@ -125,11 +125,10 @@ export default function EnhancedTradePage({
       
       if (mockEventDetails.type === 'threshold' && mockEventDetails.thresholds) {
         setSelectedThreshold(mockEventDetails.thresholds[0]);
-        // Update probability volumes here
         setProbabilityVolumes(generateThresholdVolumes(mockEventDetails.thresholds, initialProbabilityVolumes));
       }
     }
-  }, [id]); // Only depend on id
+  }, [id, initialProbabilityVolumes]); // Added initialProbabilityVolumes to dependencies
 
   const calculateTimeBasedMultiplier = () => {
     const now = new Date()

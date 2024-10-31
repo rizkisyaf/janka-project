@@ -6,7 +6,6 @@ const nextConfig = {
   },
   experimental: {
     optimizeCss: true,
-    optimizeImages: true,
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {
