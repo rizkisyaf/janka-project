@@ -2,9 +2,11 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+// @ts-ignore
 const path = require('path');
 const { Telegraf } = require('telegraf');
 const WebSocket = require('ws');
+// @ts-ignore
 const fs = require('fs');
 const validator = require('validator');
 const nodemailer = require('nodemailer');
@@ -56,6 +58,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Add request logging middleware
+// @ts-ignore
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   next();
@@ -186,14 +189,167 @@ const feedbackSchema = new mongoose.Schema({
 });
 const Feedback = mongoose.model('Feedback', feedbackSchema);
 
+function isDbConnected() {
+  return mongoose.connection.readyState === 1;
+}
 
+async function waitForConnection(maxRetries = 5) {
+  for (let i = 0; i < maxRetries; i++) {
+    if (isDbConnected()) {
+      return true;
+    }
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+  return false;
+}
 
 // Initialize database connection before starting server
 connectToMongo()
   .then((database) => {
     app.locals.db = database;
 
-    // Start server after models are defined
+    // Define routes here
+    // @ts-ignore
+    app.post('/api/feedback', async (req, res) => {
+      try {
+        if (!await waitForConnection()) {
+          throw new Error('Database connection not ready');
+        }
+        const { answers } = req.body;
+
+        // Validate answers
+        if (!Array.isArray(answers)) {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid feedback format'
+          });
+        }
+
+        // Save each answer
+        const savedFeedback = await Promise.all(
+          answers.map(async (answer) => {
+            const feedback = new Feedback({
+              questionId: answer.questionId,
+              question: answer.question,
+              answer: answer.answer,
+              customAnswer: answer.customAnswer
+            });
+            return await feedback.save();
+          })
+        );
+
+        // Send notification to Telegram
+        const telegramMessage = `📊 New Feedback Received!\n\n${answers.map(a =>
+          `Q: ${a.question}\nA: ${a.customAnswer || a.answer}`
+        ).join('\n\n')
+          }`;
+
+        try {
+          await bot.telegram.sendMessage(
+            String(process.env.TELEGRAM_GROUP_ID),
+            telegramMessage,
+            { parse_mode: 'HTML' }
+          );
+        } catch (telegramError) {
+          console.error('Failed to send Telegram notification:', telegramError);
+        }
+
+        res.status(201).json({
+          success: true,
+          message: 'Feedback received successfully',
+          data: savedFeedback
+        });
+      } catch (error) {
+        console.error('Feedback error:', error);
+        res.status(500).json({
+          success: false,
+          message: 'Error processing feedback',
+          error: process.env.NODE_ENV === 'production' ? undefined : error.message
+        });
+      }
+    });
+
+    app.post('/api/newsletter', async (req, res) => {
+      try {
+        if (!await waitForConnection()) {
+          throw new Error('Database connection not ready');
+        }
+        const { email } = req.body;
+        const newsletterEntry = new Newsletter({ email });
+        await newsletterEntry.save();
+        res.status(201).json({ message: 'Successfully subscribed to the newsletter' });
+      } catch (error) {
+        if (error.code === 11000) {
+          res.status(400).json({ message: 'Email already subscribed to the newsletter' });
+        } else {
+          res.status(500).json({ message: 'Error subscribing to newsletter', error: error.message });
+        }
+      }
+    });
+
+    // @ts-ignore
+    app.get('/api/donations', async (req, res) => {
+      try {
+        if (!await waitForConnection()) {
+          throw new Error('Database connection not ready');
+        }
+
+        const donations = await Donation.find().lean();
+
+        if (!donations) {
+          return res.status(200).json({
+            totalDonations: 0,
+            donorCount: 0,
+            targetAmount: 200,
+            currency: 'SOL',
+            success: true
+          });
+        }
+
+        const totalDonations = donations.reduce((acc, curr) => acc + curr.amount, 0);
+        const donorCount = donations.length;
+        const targetAmount = 200;
+        const progressPercentage = (totalDonations / targetAmount) * 100;
+
+        res.json({
+          totalDonations,
+          donorCount,
+          targetAmount,
+          progressPercentage,
+          currency: 'SOL',
+          success: true
+        });
+      } catch (error) {
+        console.error('Error fetching donations:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Internal server error',
+          message: error.message,
+          stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+        });
+      }
+    });
+
+    // Error handlers should also be inside
+    // @ts-ignore
+    app.use((err, req, res, next) => {
+      console.error(err.stack);
+      res.status(500).json({
+        success: false,
+        message: 'Internal Server Error',
+        error: process.env.NODE_ENV === 'production' ? undefined : err.message
+      });
+    });
+
+    // @ts-ignore
+    app.use((req, res) => {
+      res.status(404).json({
+        success: false,
+        message: 'Route not found'
+      });
+    });
+
+    // Start server only after routes are defined
     server.listen(port, () => {
       console.log(`Server running on port ${port}`);
     });
@@ -352,24 +508,6 @@ app.post('/api/waitlist', async (req, res) => {
   }
 });
 
-app.post('/api/newsletter', async (req, res) => {
-  try {
-    if (mongoose.connection.readyState !== 1) {
-      throw new Error('Database connection not ready');
-    }
-    const { email } = req.body;
-    const newsletterEntry = new Newsletter({ email });
-    await newsletterEntry.save();
-    res.status(201).json({ message: 'Successfully subscribed to the newsletter' });
-  } catch (error) {
-    if (error.code === 11000) {
-      res.status(400).json({ message: 'Email already subscribed to the newsletter' });
-    } else {
-      res.status(500).json({ message: 'Error subscribing to newsletter', error: error.message });
-    }
-  }
-});
-
 // @ts-ignore
 app.post('/api/donations', async (req, res) => {
   try {
@@ -432,112 +570,8 @@ app.post('/api/donations', async (req, res) => {
   }
 });
 
-// @ts-ignore
-app.get('/api/donations', async (req, res) => {
-  try {
-    if (mongoose.connection.readyState !== 1) {
-      throw new Error('Database not connected');
-    }
-
-    const donations = await Donation.find().lean();
-
-    if (!donations) {
-      return res.status(200).json({
-        totalDonations: 0,
-        donorCount: 0,
-        targetAmount: 200,
-        currency: 'SOL',
-        success: true
-      });
-    }
-
-    const totalDonations = donations.reduce((acc, curr) => acc + curr.amount, 0);
-    const donorCount = donations.length;
-    const targetAmount = 200;
-    const progressPercentage = (totalDonations / targetAmount) * 100;
-
-    res.json({
-      totalDonations,
-      donorCount,
-      targetAmount,
-      progressPercentage,
-      currency: 'SOL',
-      success: true
-    });
-  } catch (error) {
-    console.error('Error fetching donations:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Internal server error',
-      message: error.message,
-      stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
-    });
-  }
-});
-
-// @ts-ignore
-app.post('/api/feedback', async (req, res) => {
-  try {
-    // Check connection state before proceeding
-    if (mongoose.connection.readyState !== 1) {
-      throw new Error('Database connection not ready');
-    }
-
-    const { answers } = req.body;
-
-    // Validate answers
-    if (!Array.isArray(answers)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid feedback format'
-      });
-    }
-
-    // Save each answer
-    const savedFeedback = await Promise.all(
-      answers.map(async (answer) => {
-        const feedback = new Feedback({
-          questionId: answer.questionId,
-          question: answer.question,
-          answer: answer.answer,
-          customAnswer: answer.customAnswer
-        });
-        return await feedback.save();
-      })
-    );
-
-    // Send notification to Telegram
-    const telegramMessage = `📊 New Feedback Received!\n\n${answers.map(a =>
-      `Q: ${a.question}\nA: ${a.customAnswer || a.answer}`
-    ).join('\n\n')
-      }`;
-
-    try {
-      await bot.telegram.sendMessage(
-        String(process.env.TELEGRAM_GROUP_ID),
-        telegramMessage,
-        { parse_mode: 'HTML' }
-      );
-    } catch (telegramError) {
-      console.error('Failed to send Telegram notification:', telegramError);
-    }
-
-    res.status(201).json({
-      success: true,
-      message: 'Feedback received successfully',
-      data: savedFeedback
-    });
-  } catch (error) {
-    console.error('Feedback error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error processing feedback',
-      error: process.env.NODE_ENV === 'production' ? undefined : error.message
-    });
-  }
-});
-
 // Add this after your routes
+// @ts-ignore
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
@@ -548,6 +582,7 @@ app.use((err, req, res, next) => {
 });
 
 // Add 404 handler
+// @ts-ignore
 app.use((req, res) => {
   res.status(404).json({
     success: false,
