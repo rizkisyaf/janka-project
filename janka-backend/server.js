@@ -187,7 +187,7 @@ const feedbackSchema = new mongoose.Schema({
   questionId: { type: Number, required: true },
   question: { type: String, required: true },
   answer: { type: String, required: true },
-  customAnswer: { type: String },
+  customFeedback: { type: String },
   createdAt: { type: Date, default: Date.now }
 });
 const Feedback = mongoose.model('Feedback', feedbackSchema);
@@ -213,7 +213,7 @@ app.post('/api/feedback', async (req, res) => {
     if (!await waitForConnection()) {
       throw new Error('Database connection not ready');
     }
-    const { answers } = req.body;
+    const { answers, customFeedback } = req.body;
 
     // Validate answers
     if (!Array.isArray(answers)) {
@@ -230,17 +230,18 @@ app.post('/api/feedback', async (req, res) => {
           questionId: answer.questionId,
           question: answer.question,
           answer: answer.answer,
-          customAnswer: answer.customAnswer
+          customFeedback: customFeedback
         });
         return await feedback.save();
       })
     );
 
-    // Send notification to Telegram
-    const telegramMessage = `📊 New Feedback Received!\n\n${answers.map(a =>
-      `Q: ${a.question}\nA: ${a.customAnswer || a.answer}`
-    ).join('\n\n')
-      }`;
+    // Format Telegram message to include custom feedback separately
+    const telegramMessage = `📊 New Feedback Received!\n\n${
+      answers.map(a => `Q: ${a.question}\nA: ${a.answer}`).join('\n\n')
+    }${
+      customFeedback ? `\n\n💭 Additional Feedback:\n${customFeedback}` : ''
+    }`;
 
     try {
       await bot.telegram.sendMessage(
