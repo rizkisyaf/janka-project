@@ -127,6 +127,15 @@ const donationSchema = new mongoose.Schema({
 });
 const Donation = mongoose.model('Donation', donationSchema);
 
+const feedbackSchema = new mongoose.Schema({
+  questionId: { type: Number, required: true },
+  question: { type: String, required: true },
+  answer: { type: String, required: true },
+  customAnswer: { type: String },
+  createdAt: { type: Date, default: Date.now }
+});
+const Feedback = mongoose.model('Feedback', feedbackSchema);
+
 // Create WebSocket server
 const wss = new WebSocket.Server({ server });
 
@@ -364,6 +373,64 @@ app.get('/api/donations', async (req, res) => {
       error: 'Internal server error',
       message: error.message,
       stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+    });
+  }
+});
+
+// @ts-ignore
+app.post('/api/feedback', async (req, res) => {
+  try {
+    const { answers } = req.body;
+    
+    // Validate answers
+    if (!Array.isArray(answers)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid feedback format' 
+      });
+    }
+
+    // Save each answer
+    const savedFeedback = await Promise.all(
+      answers.map(async (answer) => {
+        const feedback = new Feedback({
+          questionId: answer.questionId,
+          question: answer.question,
+          answer: answer.answer,
+          customAnswer: answer.customAnswer
+        });
+        return await feedback.save();
+      })
+    );
+
+    // Send notification to Telegram
+    const telegramMessage = `📊 New Feedback Received!\n\n${
+      answers.map(a => 
+        `Q: ${a.question}\nA: ${a.customAnswer || a.answer}`
+      ).join('\n\n')
+    }`;
+
+    try {
+      await bot.telegram.sendMessage(
+        String(process.env.TELEGRAM_GROUP_ID), 
+        telegramMessage, 
+        { parse_mode: 'HTML' }
+      );
+    } catch (telegramError) {
+      console.error('Failed to send Telegram notification:', telegramError);
+    }
+
+    res.status(201).json({ 
+      success: true, 
+      message: 'Feedback received successfully',
+      data: savedFeedback
+    });
+  } catch (error) {
+    console.error('Feedback error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error processing feedback',
+      error: process.env.NODE_ENV === 'production' ? undefined : error.message
     });
   }
 });
