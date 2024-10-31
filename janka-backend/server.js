@@ -12,9 +12,36 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
 
 dotenv.config();
 
+// MongoDB connection setup
+const uri = process.env.MONGODB_URI;
+if (!uri) {
+  throw new Error('MONGODB_URI must be provided');
+}
+// Telegram bot setup
+if (!process.env.TELEGRAM_BOT_TOKEN) {
+  throw new Error('TELEGRAM_BOT_TOKEN must be provided');
+}
+const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
+bot.launch();
+if (!process.env.TELEGRAM_GROUP_ID) {
+  throw new Error('TELEGRAM_GROUP_ID must be provided');
+}
+if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+  throw new Error('SMTP credentials must be provided');
+}
+
 const app = express();
 const port = process.env.PORT || 3000;
 const server = require('http').createServer(app);
+// Create WebSocket server
+const wss = new WebSocket.Server({ server });
+wss.on('connection', (ws) => {
+  console.log('Client connected');
+
+  ws.on('close', () => {
+    console.log('Client disconnected');
+  });
+});
 
 // Middleware
 app.use(cors({
@@ -33,12 +60,6 @@ app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   next();
 });
-
-// MongoDB connection setup
-const uri = process.env.MONGODB_URI;
-if (!uri) {
-  throw new Error('MONGODB_URI must be provided');
-}
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -62,6 +83,23 @@ client.on('commandStarted', (event) => console.debug('MongoDB Command Started:',
 client.on('commandSucceeded', (event) => console.debug('MongoDB Command Succeeded:', event));
 client.on('commandFailed', (event) => console.debug('MongoDB Command Failed:', event));
 
+// Add connection options for better security
+const mongooseOptions = {
+  retryWrites: true,
+  w: 1,
+  replicaSet: 'atlas-xh3z3h-shard-0',
+  authSource: 'admin',
+  directConnection: false,
+  tls: true,
+  tlsAllowInvalidCertificates: false,
+  tlsAllowInvalidHostnames: false,
+  bufferCommands: true,
+  autoCreate: false,
+  serverSelectionTimeoutMS: 30000,
+  socketTimeoutMS: 45000,
+  family: 4
+};
+
 async function connectToMongo() {
   try {
     if (!uri) {
@@ -78,18 +116,19 @@ async function connectToMongo() {
         const db = client.db();
         await db.command({ ping: 1 });
 
-        // Connect Mongoose with the validated uri
-        await mongoose.connect(uri, {
-          retryWrites: true,
-          w: 1,
-          replicaSet: 'atlas-xh3z3h-shard-0',
-          authSource: 'admin',
-          directConnection: false,
-          tls: true,
-          tlsAllowInvalidCertificates: false,
-          tlsAllowInvalidHostnames: false,
-          bufferCommands: true,
-          autoCreate: false
+        // Connect Mongoose and wait for it to be ready
+        await mongoose.connect(uri, mongooseOptions);
+
+        // Wait for connection to be ready
+        await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Mongoose connection timeout'));
+          }, 5000);
+
+          mongoose.connection.once('connected', () => {
+            clearTimeout(timeout);
+            resolve(undefined);
+          });
         });
 
         console.log("Successfully connected to MongoDB!");
@@ -112,38 +151,6 @@ async function connectToMongo() {
     throw error;
   }
 }
-
-// Initialize database connection before starting server
-connectToMongo()
-  .then((database) => {
-    app.locals.db = database;
-    server.listen(port, () => {
-      console.log(`Server running on port ${port}`);
-    });
-  })
-  .catch((err) => {
-    console.error('MongoDB connection error:', err);
-    process.exit(1);
-  });
-
-// Update the graceful shutdown handler
-process.on('SIGINT', async () => {
-  try {
-    await client.close();
-    console.log('MongoDB connection closed through app termination');
-    process.exit(0);
-  } catch (err) {
-    console.error('Error during shutdown:', err);
-    process.exit(1);
-  }
-});
-
-// Telegram bot setup
-if (!process.env.TELEGRAM_BOT_TOKEN) {
-  throw new Error('TELEGRAM_BOT_TOKEN must be provided');
-}
-const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
-bot.launch();
 
 // Models
 const waitlistSchema = new mongoose.Schema({
@@ -179,15 +186,52 @@ const feedbackSchema = new mongoose.Schema({
 });
 const Feedback = mongoose.model('Feedback', feedbackSchema);
 
-// Create WebSocket server
-const wss = new WebSocket.Server({ server });
 
-wss.on('connection', (ws) => {
-  console.log('Client connected');
 
-  ws.on('close', () => {
-    console.log('Client disconnected');
+// Initialize database connection before starting server
+connectToMongo()
+  .then((database) => {
+    app.locals.db = database;
+
+    // Start server after models are defined
+    server.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+    });
+  })
+  .catch((err) => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
   });
+
+// Update the graceful shutdown handler
+process.on('SIGINT', async () => {
+  try {
+    bot.stop('SIGINT');
+    await Promise.all([
+      client.close(),
+      mongoose.connection.close()
+    ]);
+    console.log('Database connections closed through app termination');
+    process.exit(0);
+  } catch (err) {
+    console.error('Error during shutdown:', err);
+    process.exit(1);
+  }
+});
+
+process.on('SIGTERM', async () => {
+  try {
+    bot.stop('SIGTERM');
+    await Promise.all([
+      client.close(),
+      mongoose.connection.close()
+    ]);
+    console.log('Database connections closed');
+    process.exit(0);
+  } catch (err) {
+    console.error('Error during shutdown:', err);
+    process.exit(1);
+  }
 });
 
 // Email transporter setup
@@ -202,6 +246,10 @@ const transporter = nodemailer.createTransport({
 // @ts-ignore
 app.post('/api/waitlist', async (req, res) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      throw new Error('Database connection not ready');
+    }
+    
     const { email } = req.body;
 
     if (!email) {
@@ -306,6 +354,9 @@ app.post('/api/waitlist', async (req, res) => {
 
 app.post('/api/newsletter', async (req, res) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      throw new Error('Database connection not ready');
+    }
     const { email } = req.body;
     const newsletterEntry = new Newsletter({ email });
     await newsletterEntry.save();
@@ -322,6 +373,10 @@ app.post('/api/newsletter', async (req, res) => {
 // @ts-ignore
 app.post('/api/donations', async (req, res) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      throw new Error('Database connection not ready');
+    }
+
     const { amount, message } = req.body;
 
     if (amount <= 0) {
@@ -423,6 +478,11 @@ app.get('/api/donations', async (req, res) => {
 // @ts-ignore
 app.post('/api/feedback', async (req, res) => {
   try {
+    // Check connection state before proceeding
+    if (mongoose.connection.readyState !== 1) {
+      throw new Error('Database connection not ready');
+    }
+
     const { answers } = req.body;
 
     // Validate answers
@@ -477,17 +537,6 @@ app.post('/api/feedback', async (req, res) => {
   }
 });
 
-// Graceful shutdown
-process.on('SIGINT', () => {
-  bot.stop('SIGINT');
-  process.exit();
-});
-
-process.on('SIGTERM', () => {
-  bot.stop('SIGTERM');
-  process.exit();
-});
-
 // Add this after your routes
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -518,41 +567,6 @@ process.on('uncaughtException', (error) => {
   process.exit(1);
 });
 
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-  try {
-    await client.close();
-    console.log('MongoDB connection closed');
-    process.exit(0);
-  } catch (err) {
-    console.error('Error during shutdown:', err);
-    process.exit(1);
-  }
-});
-
-// Add connection options for better security
-const mongooseOptions = {
-  retryWrites: true,
-  w: 1,
-  replicaSet: 'atlas-xh3z3h-shard-0',
-  authSource: 'admin',
-  directConnection: false,
-  tls: true,
-  tlsAllowInvalidCertificates: false,
-  tlsAllowInvalidHostnames: false,
-  bufferCommands: false,
-  autoCreate: false,
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 30000,
-  socketTimeoutMS: 45000,
-  family: 4
-};
-
-mongoose.connect(uri, mongooseOptions)
-  .then(() => console.log('Mongoose connected to MongoDB'))
-  .catch(err => console.error('Mongoose connection error:', err));
-
 // Add these new event handlers (after line 520)
 mongoose.connection.on('connecting', () => {
   console.log('Mongoose connecting to MongoDB...');
@@ -571,17 +585,8 @@ mongoose.connection.on('connected', () => {
   console.log('Mongoose connected to MongoDB');
 });
 
-mongoose.connection.on('error', (err) => {
-  console.error('Mongoose connection error:', err);
-});
-
 mongoose.connection.on('disconnected', () => {
   console.log('Mongoose disconnected');
 });
-
-// Add this validation at app startup
-if (!process.env.TELEGRAM_GROUP_ID) {
-  throw new Error('TELEGRAM_GROUP_ID must be provided');
-}
 
 module.exports = app;
