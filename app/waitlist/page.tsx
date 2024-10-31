@@ -15,19 +15,13 @@ import { createTransferInstruction } from '@solana/spl-token'
 import axios from 'axios'
 import Link from 'next/link'
 import Sparkle from 'react-sparkle'
-import { useDonationQueue } from '@/app/hooks/useDonationQueue'
 import { useDonationTracker } from '../hooks/useDonationTracker'
 import { Toaster, toast } from 'react-hot-toast'
 import { showToast } from '@/components/ui/custom-toast'
 import WaitlistQuiz from '@/components/quiz'
 
 export default function WaitlistPage() {
-  const { totalDonations, donorCount, notifications, connectToWebSocket, wsStatus } = useDonationTracker()
-
-  useEffect(() => {
-    const ws = connectToWebSocket()
-    return () => ws?.close()
-  }, [connectToWebSocket])
+  const { totalDonations, donorCount, notifications } = useDonationTracker()
 
   const [darkMode, setDarkMode] = useState(false)
   const [email, setEmail] = useState('')
@@ -384,13 +378,6 @@ export default function WaitlistPage() {
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-12">Donation Progress</h2>
             <div className="max-w-3xl mx-auto">
-              {wsStatus === 'connecting' ? (
-                <div className="text-center">Loading donation data...</div>
-              ) : wsStatus === 'disconnected' ? (
-                <div className="text-center text-red-500">
-                  Unable to connect to donation tracker. Please refresh the page.
-                </div>
-              ) : (
                 <Card>
                   <CardHeader>
                     <CardTitle>Community Support Progress</CardTitle>
@@ -420,7 +407,6 @@ export default function WaitlistPage() {
                     </div>
                   </CardContent>
                 </Card>
-              )}
             </div>
           </div>
         </section>
