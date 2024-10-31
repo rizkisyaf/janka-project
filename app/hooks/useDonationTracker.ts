@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
-import axios from 'axios'
+import axiosInstance from '../../lib/axios'
 import { useDonationQueue } from './useDonationQueue'
 
 export function useDonationTracker() {
     const [totalDonations, setTotalDonations] = useState(0)
     const [donorCount, setDonorCount] = useState(0)
-    const [notifications, setNotifications] = useState<{id: number, type: 'donation' | 'donor', amount?: number}[]>([])
+    const [notifications, setNotifications] = useState<{ id: number, type: 'donation' | 'donor', amount?: number }[]>([])
     const [notificationId, setNotificationId] = useState(0)
     const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected')
     const { queue, addToQueue, processQueue, isProcessing } = useDonationQueue()
@@ -23,40 +23,56 @@ export function useDonationTracker() {
     useEffect(() => {
         const fetchDonationData = async () => {
             try {
-                const response = await axios.get('/api/donations')
-                setTotalDonations(response.data.totalDonations)
-                setDonorCount(response.data.donorCount)
+                const response = await axiosInstance.get('/donations')
+                if (response.data.success) {
+                    setTotalDonations(response.data.totalDonations)
+                    setDonorCount(response.data.donorCount)
+                }
             } catch (error) {
                 console.error('Error fetching donation data:', error)
             }
         }
 
         fetchDonationData()
-        const pollInterval = setInterval(fetchDonationData, 30000)
+        const pollInterval = setInterval(fetchDonationData, 4 * 60 * 60 * 1000)
 
         return () => clearInterval(pollInterval)
     }, [])
 
     const connectToWebSocket = useCallback(() => {
-        const ws = new WebSocket('wss://janka-project.vercel.app')
+        setWsStatus('connecting');
+        const ws = new WebSocket('wss://janka-project.vercel.app');
+
+        ws.onopen = () => {
+            setWsStatus('connected');
+        };
+
+        ws.onclose = () => {
+            setWsStatus('disconnected');
+        };
+
+        ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            setWsStatus('disconnected');
+        };
 
         ws.onmessage = (event) => {
             try {
-                const data = JSON.parse(event.data)
+                const data = JSON.parse(event.data);
                 if (data.type === 'donation') {
-                    setTotalDonations(prev => prev + data.amount)
-                    addNotification('donation', data.amount)
+                    setTotalDonations(prev => prev + data.amount);
+                    addNotification('donation', data.amount);
                 } else if (data.type === 'donor') {
-                    setDonorCount(prev => prev + 1)
-                    addNotification('donor')
+                    setDonorCount(prev => prev + 1);
+                    addNotification('donor');
                 }
             } catch (error) {
-                console.error('Error processing message:', error)
+                console.error('Error processing message:', error);
             }
-        }
+        };
 
-        return ws
-    }, [addNotification])
+        return ws;
+    }, [addNotification]);
 
     return {
         totalDonations,

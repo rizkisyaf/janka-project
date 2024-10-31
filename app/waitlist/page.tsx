@@ -21,80 +21,14 @@ import { Toaster, toast } from 'react-hot-toast'
 import { showToast } from '@/components/ui/custom-toast'
 import WaitlistQuiz from '@/components/quiz'
 
-interface Notification {
-  id: number;
-  type: 'donation' | 'donor';
-  amount?: number;
-}
-
-function DonationTracker() {
-  const [totalDonations, setTotalDonations] = useState(0)
-  const [donorCount, setDonorCount] = useState(0)
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [notificationId, setNotificationId] = useState(0)
-  const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected')
-  const { queue, addToQueue, processQueue, isProcessing } = useDonationQueue()
-
-  const addNotification = useCallback((type: 'donation' | 'donor', amount?: number) => {
-    const newId = notificationId + 1
-    setNotificationId(newId)
-    setNotifications(prev => [...prev, { id: newId, type, amount }])
-
-    setTimeout(() => {
-      setNotifications(prev => prev.filter(n => n.id !== newId))
-    }, 3000)
-  }, [notificationId])
+export default function WaitlistPage() {
+  const { totalDonations, donorCount, notifications, connectToWebSocket, wsStatus } = useDonationTracker()
 
   useEffect(() => {
-    const fetchDonationData = async () => {
-      try {
-        const response = await axios.get('https://janka-project.vercel.app/api/donations')
-        setTotalDonations(response.data.totalDonations)
-        setDonorCount(response.data.donorCount)
-      } catch (error) {
-        console.error('Error fetching donation data:', error)
-      }
-    }
+    const ws = connectToWebSocket()
+    return () => ws?.close()
+  }, [connectToWebSocket])
 
-    // Initial fetch
-    fetchDonationData()
-
-    // Poll every 30 seconds
-    const pollInterval = setInterval(fetchDonationData, 30000)
-
-    return () => clearInterval(pollInterval)
-  }, [])
-
-  // Separate WebSocket logic into a custom hook
-  const connectToWebSocket = useCallback(() => {
-    const ws = new WebSocket('wss://janka-project.vercel.app')
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data)
-        if (data.type === 'donation') {
-          setTotalDonations(prev => prev + data.amount)
-          addNotification('donation', data.amount)
-        } else if (data.type === 'donor') {
-          setDonorCount(prev => prev + 1)
-          addNotification('donor')
-        }
-      } catch (error) {
-        console.error('Error processing message:', error)
-      }
-    }
-
-    return ws
-  }, [addNotification])
-  // Expose the WebSocket connection function
-  return {
-    stats: { totalDonations, donorCount },
-    notifications,
-    connectToWebSocket
-  }
-}
-
-export default function WaitlistPage() {
   const [darkMode, setDarkMode] = useState(false)
   const [email, setEmail] = useState('')
   const [donationAmount, setDonationAmount] = useState('')
@@ -104,6 +38,7 @@ export default function WaitlistPage() {
   const [showSparkle, setShowSparkle] = useState(false)
   const [footerEmail, setFooterEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+
 
   const handleJoinWaitlist = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -141,14 +76,6 @@ export default function WaitlistPage() {
     window.open('https://t.me/+P32IFExNVoRlNjQ1', '_blank')
   }
 
-  // Move DonationTracker logic to a custom hook
-  const {
-    totalDonations,
-    donorCount,
-    notifications,
-    connectToWebSocket
-  } = useDonationTracker()
-
   const handleDonation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!publicKey) {
@@ -159,7 +86,7 @@ export default function WaitlistPage() {
     try {
       const transaction = new Transaction();
       const recipientPublicKey = new PublicKey('4TSJPLqvzfejeh2fPdXnUs8sFnfSQ2qSs2N4WYzA9usK');
-      
+
       // Create a native SOL transfer instruction
       const transferInstruction = SystemProgram.transfer({
         fromPubkey: publicKey,
@@ -448,6 +375,43 @@ export default function WaitlistPage() {
                     Donate <Coins className="ml-2 h-4 w-4" />
                   </Button>
                 </CardFooter>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        <section id="donation-progress" className="py-16 bg-gray-50 dark:bg-gray-900">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-12">Donation Progress</h2>
+            <div className="max-w-3xl mx-auto">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Community Support Progress</CardTitle>
+                  <CardDescription>
+                    Target: 200 SOL - Updates every 4 hours
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between text-sm">
+                      <span>{totalDonations.toFixed(2)} SOL raised</span>
+                      <span>200 SOL goal</span>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
+                      <div
+                        className="bg-primary rounded-full h-4 transition-all duration-500"
+                        style={{ width: `${Math.min((totalDonations / 200) * 100, 100)}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
+                      <span>{donorCount} donors</span>
+                      <span>Last updated: {new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
+                      * Progress updates every 4 hours to ensure accurate tracking of donations.
+                    </p>
+                  </div>
+                </CardContent>
               </Card>
             </div>
           </div>

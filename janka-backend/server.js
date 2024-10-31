@@ -453,7 +453,11 @@ app.post('/api/donations', async (req, res) => {
         client.send(JSON.stringify({
           type: 'donation',
           amount: amount,
-          currency: 'SOL'
+          message: message || undefined
+        }));
+        // Send separate donor notification
+        client.send(JSON.stringify({
+          type: 'donor'
         }));
       }
     });
