@@ -384,35 +384,43 @@ export default function WaitlistPage() {
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-12">Donation Progress</h2>
             <div className="max-w-3xl mx-auto">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Community Support Progress</CardTitle>
-                  <CardDescription>
-                    Target: 200 SOL - Updates every 4 hours
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between text-sm">
-                      <span>{totalDonations.toFixed(2)} SOL raised</span>
-                      <span>200 SOL goal</span>
+              {wsStatus === 'connecting' ? (
+                <div className="text-center">Loading donation data...</div>
+              ) : wsStatus === 'disconnected' ? (
+                <div className="text-center text-red-500">
+                  Unable to connect to donation tracker. Please refresh the page.
+                </div>
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Community Support Progress</CardTitle>
+                    <CardDescription>
+                      Target: 200 SOL - Updates every 4 hours
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex justify-between text-sm">
+                        <span>{totalDonations.toFixed(2)} SOL raised</span>
+                        <span>200 SOL goal</span>
+                      </div>
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
+                        <div
+                          className="bg-primary rounded-full h-4 transition-all duration-500"
+                          style={{ width: `${Math.min((totalDonations / 200) * 100, 100)}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
+                        <span>{donorCount} donors</span>
+                        <span>Last updated: {new Date().toLocaleTimeString()}</span>
+                      </div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
+                        * Progress updates every 4 hours to ensure accurate tracking of donations.
+                      </p>
                     </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
-                      <div
-                        className="bg-primary rounded-full h-4 transition-all duration-500"
-                        style={{ width: `${Math.min((totalDonations / 200) * 100, 100)}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
-                      <span>{donorCount} donors</span>
-                      <span>Last updated: {new Date().toLocaleTimeString()}</span>
-                    </div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-                      * Progress updates every 4 hours to ensure accurate tracking of donations.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </section>

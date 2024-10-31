@@ -23,25 +23,27 @@ export function useDonationTracker() {
     useEffect(() => {
         const fetchDonationData = async () => {
             try {
-                const response = await axiosInstance.get('/donations')
+                console.log('Fetching donation data...');
+                const response = await axiosInstance.get('/donations');
+                console.log('Donation data response:', response.data);
                 if (response.data.success) {
-                    setTotalDonations(response.data.totalDonations)
-                    setDonorCount(response.data.donorCount)
+                    setTotalDonations(response.data.totalDonations);
+                    setDonorCount(response.data.donorCount);
                 }
             } catch (error) {
-                console.error('Error fetching donation data:', error)
+                console.error('Error fetching donation data:', error);
             }
-        }
+        };
 
-        fetchDonationData()
-        const pollInterval = setInterval(fetchDonationData, 4 * 60 * 60 * 1000)
+        fetchDonationData();
+        const pollInterval = setInterval(fetchDonationData, 4 * 60 * 60 * 1000);
 
-        return () => clearInterval(pollInterval)
-    }, [])
+        return () => clearInterval(pollInterval);
+    }, []);
 
     const connectToWebSocket = useCallback(() => {
         setWsStatus('connecting');
-        const ws = new WebSocket('wss://janka-project.vercel.app');
+        const ws = new WebSocket(process.env.NEXT_PUBLIC_WS_URL || 'wss://janka-project.vercel.app');
 
         ws.onopen = () => {
             setWsStatus('connected');
