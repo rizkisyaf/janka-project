@@ -43,14 +43,22 @@ export function useDonationTracker() {
 
     const connectToWebSocket = useCallback(() => {
         setWsStatus('connecting');
-        const ws = new WebSocket(process.env.NEXT_PUBLIC_WS_URL || 'wss://janka-project.vercel.app');
+        const wsUrl = process.env.NEXT_PUBLIC_WS_URL ||
+            (process.env.NODE_ENV === 'production'
+                ? 'wss://janka-project.vercel.app/ws'
+                : 'ws://localhost:3000/ws');
+
+        const ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
             setWsStatus('connected');
+            console.log('WebSocket connected successfully');
         };
 
         ws.onclose = () => {
             setWsStatus('disconnected');
+            console.log('WebSocket disconnected, attempting to reconnect...');
+            setTimeout(() => connectToWebSocket(), 5000); // Reconnect after 5 seconds
         };
 
         ws.onerror = (error) => {
