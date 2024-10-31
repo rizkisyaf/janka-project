@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X } from 'lucide-react'
+import { X, Loader2 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -50,6 +50,9 @@ export default function FeedbackWidget() {
   const [answers, setAnswers] = useState<Record<number, string>>({})
   const [customAnswer, setCustomAnswer] = useState("")
   const [showDemoMessage, setShowDemoMessage] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [finalCustomFeedback, setFinalCustomFeedback] = useState("")
 
   useEffect(() => {
     const hasSeenWelcome = localStorage.getItem('hasSeenWelcome')
@@ -75,37 +78,47 @@ export default function FeedbackWidget() {
 
     if (currentQuestion < feedbackQuestions.length - 1) {
       setCurrentQuestion(prev => prev + 1)
-    } else {
-      // Prepare feedback data
-      const feedbackData = Object.entries(currentAnswers).map(([questionId, answer]) => ({
-        questionId: parseInt(questionId),
-        question: feedbackQuestions[parseInt(questionId)].question,
-        answer,
-        customAnswer: answer === 'custom' ? customAnswer : undefined
-      }))
+    } else if (!feedbackQuestions[currentQuestion].allowCustom) {
+      await submitFeedback(currentAnswers)
+    }
+  }
 
-      try {
-        const response = await fetch('/api/feedback', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ answers: feedbackData }),
-        })
+  const submitFeedback = async (currentAnswers: Record<number, string>) => {
+    setIsSubmitting(true)
+    setSubmitStatus('idle')
 
-        if (!response.ok) {
-          throw new Error('Failed to submit feedback')
-        }
+    // Prepare feedback data
+    const feedbackData = Object.entries(currentAnswers).map(([questionId, answer]) => ({
+      questionId: parseInt(questionId),
+      question: feedbackQuestions[parseInt(questionId)].question,
+      answer,
+      customFeedback: finalCustomFeedback
+    }))
 
-        showToast.success('Thank you for your feedback!')
+    try {
+      const response = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ answers: feedbackData }),
+      })
+
+      if (!response.ok) throw new Error('Failed to submit feedback')
+
+      setSubmitStatus('success')
+      setTimeout(() => {
         setIsOpen(false)
         setCurrentQuestion(-1)
         setAnswers({})
-        setCustomAnswer('')
-      } catch (error) {
-        console.error('Error submitting feedback:', error)
-        showToast.error('Failed to submit feedback. Please try again.')
-      }
+        setFinalCustomFeedback('')
+        setSubmitStatus('idle')
+      }, 2000)
+    } catch (error) {
+      console.error('Error submitting feedback:', error)
+      setSubmitStatus('error')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -168,24 +181,48 @@ export default function FeedbackWidget() {
                           <Label htmlFor={`option-${index}`}>{option}</Label>
                         </div>
                       ))}
-                      {feedbackQuestions[currentQuestion].allowCustom && (
-                        <div className="mt-4">
-                          <Textarea
-                            placeholder="Or type your own answer..."
-                            value={customAnswer}
-                            onChange={(e) => setCustomAnswer(e.target.value)}
-                            className="mb-2"
-                          />
-                          <Button 
-                            onClick={() => handleAnswer(customAnswer)}
-                            disabled={!customAnswer.trim()}
-                            size="sm"
-                          >
-                            Submit Custom Answer
-                          </Button>
-                        </div>
-                      )}
                     </RadioGroup>
+                    
+                    {currentQuestion === feedbackQuestions.length - 1 && (
+                      <div className="mt-4">
+                        <Textarea
+                          placeholder="Any additional feedback?"
+                          value={finalCustomFeedback}
+                          onChange={(e) => setFinalCustomFeedback(e.target.value)}
+                          className="mb-2"
+                        />
+                        <Button 
+                          onClick={() => submitFeedback(answers)}
+                          disabled={isSubmitting}
+                          className="w-full"
+                        >
+                          {isSubmitting ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            'Submit Feedback'
+                          )}
+                        </Button>
+                        
+                        <AnimatePresence>
+                          {submitStatus !== 'idle' && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -10 }}
+                              className={`mt-2 p-2 rounded text-center ${
+                                submitStatus === 'success' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-red-100 text-red-800'
+                              }`}
+                            >
+                              {submitStatus === 'success' 
+                                ? 'Thank you for your feedback!' 
+                                : 'Failed to submit feedback. Please try again.'}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>
