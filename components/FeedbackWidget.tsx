@@ -53,6 +53,7 @@ export default function FeedbackWidget() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [finalCustomFeedback, setFinalCustomFeedback] = useState("")
+  const [showFinalStep, setShowFinalStep] = useState(false)
 
   useEffect(() => {
     const hasSeenWelcome = localStorage.getItem('hasSeenWelcome')
@@ -78,8 +79,8 @@ export default function FeedbackWidget() {
 
     if (currentQuestion < feedbackQuestions.length - 1) {
       setCurrentQuestion(prev => prev + 1)
-    } else if (!feedbackQuestions[currentQuestion].allowCustom) {
-      await submitFeedback(currentAnswers)
+    } else {
+      setShowFinalStep(true)
     }
   }
 
@@ -167,6 +168,46 @@ export default function FeedbackWidget() {
                       Help us improve Janka by sharing your feedback.
                     </p>
                   )
+                ) : showFinalStep ? (
+                  <div>
+                    <p className="mb-4">Any additional feedback for us?</p>
+                    <Textarea
+                      placeholder="Share your thoughts..."
+                      value={finalCustomFeedback}
+                      onChange={(e) => setFinalCustomFeedback(e.target.value)}
+                      className="mb-2"
+                    />
+                    <Button 
+                      onClick={() => submitFeedback(answers)}
+                      disabled={isSubmitting}
+                      className="w-full"
+                    >
+                      {isSubmitting ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        'Submit Feedback'
+                      )}
+                    </Button>
+                    
+                    <AnimatePresence>
+                      {submitStatus !== 'idle' && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className={`mt-2 p-2 rounded text-center ${
+                            submitStatus === 'success' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {submitStatus === 'success' 
+                            ? 'Thank you for your feedback!' 
+                            : 'Failed to submit feedback. Please try again.'}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 ) : (
                   <div>
                     <p className="mb-4">{feedbackQuestions[currentQuestion].question}</p>
@@ -182,47 +223,6 @@ export default function FeedbackWidget() {
                         </div>
                       ))}
                     </RadioGroup>
-                    
-                    {currentQuestion === feedbackQuestions.length - 1 && (
-                      <div className="mt-4">
-                        <Textarea
-                          placeholder="Any additional feedback?"
-                          value={finalCustomFeedback}
-                          onChange={(e) => setFinalCustomFeedback(e.target.value)}
-                          className="mb-2"
-                        />
-                        <Button 
-                          onClick={() => submitFeedback(answers)}
-                          disabled={isSubmitting}
-                          className="w-full"
-                        >
-                          {isSubmitting ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            'Submit Feedback'
-                          )}
-                        </Button>
-                        
-                        <AnimatePresence>
-                          {submitStatus !== 'idle' && (
-                            <motion.div
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -10 }}
-                              className={`mt-2 p-2 rounded text-center ${
-                                submitStatus === 'success' 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-red-100 text-red-800'
-                              }`}
-                            >
-                              {submitStatus === 'success' 
-                                ? 'Thank you for your feedback!' 
-                                : 'Failed to submit feedback. Please try again.'}
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    )}
                   </div>
                 )}
               </CardContent>
