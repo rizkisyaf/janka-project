@@ -147,7 +147,7 @@ export default function FeedbackWidget() {
                 {currentQuestion === -1 ? (
                   showDemoMessage ? (
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      This is a demo version of Janka. We'd love to hear your thoughts!
+                      This is a demo version of Janka. We&apos;d love to hear your thoughts!
                     </p>
                   ) : (
                     <p className="text-sm text-gray-600 dark:text-gray-400">
