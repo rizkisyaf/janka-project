@@ -4,16 +4,21 @@ import localFont from "next/font/local";
 import "./globals.css";
 import WalletProviderClient from "../components/WalletProviderClient";
 import FeedbackWidget from '@/components/FeedbackWidget'
+import { criticalCSS } from '@/app/utils/criticalCSS'
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
   weight: "100 900",
+  display: 'swap',
+  preload: true,
 });
 const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
   weight: "100 900",
+  display: 'swap',
+  preload: true,
 });
 
 export const metadata: Metadata = {
@@ -51,6 +56,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <style dangerouslySetInnerHTML={{ __html: criticalCSS }} />
+        <link rel="preload" href="./fonts/GeistVF.woff" as="font" type="font/woff" crossOrigin="anonymous" />
+        <link rel="preload" href="./fonts/GeistMonoVF.woff" as="font" type="font/woff" crossOrigin="anonymous" />
+        <link 
+          rel="stylesheet" 
+          href="/globals.css"
+          media="print"
+          onLoad={() => {
+            const link = document.querySelector('link[rel="stylesheet"]') as HTMLLinkElement;
+            if (link) {
+              link.media = 'all';
+            }
+          }}
+        />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <WalletProviderClient>{children}</WalletProviderClient>
         <FeedbackWidget />
