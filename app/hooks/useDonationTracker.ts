@@ -23,7 +23,7 @@ export function useDonationTracker() {
     useEffect(() => {
         const fetchDonationData = async () => {
             try {
-                const response = await axios.get('https://janka-project.vercel.app/api/donations')
+                const response = await axios.get('/api/donations')
                 setTotalDonations(response.data.totalDonations)
                 setDonorCount(response.data.donorCount)
             } catch (error) {

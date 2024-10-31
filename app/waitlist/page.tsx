@@ -173,7 +173,7 @@ export default function WaitlistPage() {
       const signature = await sendTransaction(transaction, connection)
       await connection.confirmTransaction(signature, 'confirmed')
 
-      await axios.post('https://janka-project.vercel.app/api/donations', {
+      await axios.post('/api/donations', {
         amount: Number(donationAmount),
         message
       })

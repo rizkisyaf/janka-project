@@ -85,7 +85,7 @@ export default function FeedbackWidget() {
       }))
 
       try {
-        const response = await fetch('https://janka-project.vercel.app/api/feedback', {
+        const response = await fetch('/api/feedback', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
