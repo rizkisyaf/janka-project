@@ -299,6 +299,23 @@ app.post('/api/waitlist', async (req, res) => {
     const waitlistEntry = new Waitlist({ email });
     await waitlistEntry.save();
 
+    // Send notification to Telegram
+    const telegramMessage = `🎉 New Waitlist Registration!\n\n` +
+      `Email: ${email}\n` +
+      `Time: ${new Date().toISOString()}\n\n` +
+      `Total Waitlist Count: ${await Waitlist.countDocuments()}`;
+
+    try {
+      await bot.telegram.sendMessage(
+        String(process.env.TELEGRAM_GROUP_ID),
+        telegramMessage,
+        { parse_mode: 'HTML' }
+      );
+    } catch (telegramError) {
+      console.error('Failed to send Telegram notification:', telegramError);
+      // Continue processing as this shouldn't fail the registration
+    }
+
     // Try to save to newsletter, ignore if already exists
     try {
       const newsletterEntry = new Newsletter({ email });

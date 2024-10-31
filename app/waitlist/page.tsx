@@ -138,7 +138,7 @@ export default function WaitlistPage() {
   }
 
   const handleJoinTelegram = () => {
-    window.open('https://t.me/+mrbJewOGK_ZiOTI1', '_blank')
+    window.open('https://t.me/+P32IFExNVoRlNjQ1', '_blank')
   }
 
   // Move DonationTracker logic to a custom hook
