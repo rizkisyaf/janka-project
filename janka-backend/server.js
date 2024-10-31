@@ -116,7 +116,12 @@ const newsletterSchema = new mongoose.Schema({
 const Newsletter = mongoose.model('Newsletter', newsletterSchema);
 
 const donationSchema = new mongoose.Schema({
-  amount: { type: Number, required: true },
+  amount: { 
+    type: Number, 
+    required: true,
+    min: 0,
+    comment: 'Amount in SOL'
+  },
   message: String,
   createdAt: { type: Date, default: Date.now },
 });
@@ -184,14 +189,52 @@ app.post('/api/waitlist', async (req, res) => {
     await transporter.sendMail({
       from: process.env.SMTP_USER,
       to: email,
-      subject: 'Welcome to Janka Waitlist!',
+      subject: 'Welcome to the Future of Insurance with Janka! 🚀',
       html: `
-        <h1>Welcome to Janka!</h1>
-        <p>Thank you for joining our waitlist. We're excited to have you on board!</p>
-        <p>We'll keep you updated on our progress and let you know when we launch.</p>
-        <br>
-        <p>Best regards,</p>
-        <p>The Janka Team</p>
+        <!DOCTYPE html>
+        <html>
+          <body style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <img src="https://janka-project.vercel.app/janka-logo.svg" alt="Janka Logo" style="width: 80px; height: 80px;">
+            </div>
+            
+            <h1 style="color: #2563eb; text-align: center; margin-bottom: 25px;">Welcome to the Janka Journey!</h1>
+            
+            <p style="margin-bottom: 15px;">Dear Future Partner,</p>
+            
+            <p style="margin-bottom: 15px;">I'm Fistya, the founder of Janka, and I'm thrilled to personally welcome you to our waitlist. Three years ago, as a cafe owner, I witnessed firsthand how unexpected events could devastate small businesses. That experience sparked a vision that became Janka.</p>
+            
+            <p style="margin-bottom: 15px;">We're building something revolutionary: a blockchain-powered insurance platform that provides instant, event-based coverage for businesses like yours. No more lengthy claims processes or rigid policies – just smart, flexible protection when you need it.</p>
+            
+            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 25px 0;">
+              <h2 style="color: #2563eb; margin-top: 0;">What's Next?</h2>
+              <ul style="list-style: none; padding: 0;">
+                <li style="margin-bottom: 10px;">✨ You'll be among the first to access our platform</li>
+                <li style="margin-bottom: 10px;">🎯 Exclusive early-adopter benefits</li>
+                <li style="margin-bottom: 10px;">📫 Regular updates on our development progress</li>
+              </ul>
+            </div>
+            
+            <p style="margin-bottom: 20px;">Your trust in Janka means everything to us. We're working tirelessly to revolutionize the insurance industry, making it work better for businesses like yours.</p>
+            
+            <p style="margin-bottom: 15px;">Have questions? Feel free to reach out. I'd love to hear your story and how Janka can help protect your business.</p>
+            
+            <p style="margin-bottom: 25px;">Together, we're building the future of insurance.</p>
+            
+            <div style="margin-top: 30px;">
+              <p style="margin-bottom: 5px;">Best regards,</p>
+              <p style="font-weight: bold; margin-bottom: 5px;">Fistya</p>
+              <p style="color: #6b7280; font-style: italic;">Founder, Janka</p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+              <p style="color: #6b7280; font-size: 0.875rem;">Follow my journey:</p>
+              <div style="margin-top: 10px;">
+                <a href="https://twitter.com/kisra_fistya" style="color: #2563eb; text-decoration: none; margin: 0 10px;">Twitter</a>
+              </div>
+            </div>
+          </body>
+        </html>
       `
     });
 
@@ -204,7 +247,7 @@ app.post('/api/waitlist', async (req, res) => {
     return res.status(500).json({ 
       success: false, 
       message: 'Error joining waitlist',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'production' ? undefined : error.message
     });
   }
 });
@@ -224,30 +267,67 @@ app.post('/api/newsletter', async (req, res) => {
   }
 });
 
+// @ts-ignore
 app.post('/api/donations', async (req, res) => {
   try {
     const { amount, message } = req.body;
+    
+    if (amount <= 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid donation amount' 
+      });
+    }
+
     const donation = new Donation({ amount, message });
     await donation.save();
 
-    // Send message to Telegram group
-    if (!process.env.TELEGRAM_GROUP_ID) {
-      throw new Error('TELEGRAM_GROUP_ID must be provided');
-    }
-    await bot.telegram.sendMessage(process.env.TELEGRAM_GROUP_ID, 
-      `New donation received: $${amount}\nMessage: ${message || 'No message'}`
-    );
+    // Format the message
+    const telegramMessage = `🎉 New Donation Received!\n\n` +
+      `Amount: ${amount} SOL\n` +
+      `Message: ${message || 'No message'}\n` +
+      `Time: ${new Date().toISOString()}`;
 
-    res.status(201).json({ message: 'Donation received successfully' });
+    try {
+      await bot.telegram.sendMessage(String(process.env.TELEGRAM_GROUP_ID), telegramMessage, {
+        parse_mode: 'HTML',
+        disable_notification: false
+      });
+    } catch (telegramError) {
+      // Log the error but don't fail the donation
+      console.error('Failed to send Telegram notification:', telegramError);
+      // Continue processing the donation
+    }
+
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({
+          type: 'donation',
+          amount: amount,
+          currency: 'SOL'
+        }));
+      }
+    });
+
+    res.status(201).json({ 
+      success: true,
+      message: 'Donation received successfully',
+      amount: amount,
+      currency: 'SOL'
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Error processing donation', error: error.message });
+    console.error('Donation error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error processing donation', 
+      error: process.env.NODE_ENV === 'production' ? undefined : error.message 
+    });
   }
 });
 
 // @ts-ignore
 app.get('/api/donations', async (req, res) => {
   try {
-    // Add connection check
     if (mongoose.connection.readyState !== 1) {
       throw new Error('Database not connected');
     }
@@ -257,27 +337,33 @@ app.get('/api/donations', async (req, res) => {
     if (!donations) {
       return res.status(200).json({
         totalDonations: 0,
-        donorCount: 0
+        donorCount: 0,
+        targetAmount: 200,
+        currency: 'SOL',
+        success: true
       });
     }
 
     const totalDonations = donations.reduce((acc, curr) => acc + curr.amount, 0);
     const donorCount = donations.length;
+    const targetAmount = 200;
+    const progressPercentage = (totalDonations / targetAmount) * 100;
     
     res.json({
       totalDonations,
       donorCount,
+      targetAmount,
+      progressPercentage,
+      currency: 'SOL',
       success: true
     });
   } catch (error) {
     console.error('Error fetching donations:', error);
-    // Send more detailed error response
     res.status(500).json({ 
       success: false,
       error: 'Internal server error',
       message: error.message,
-      // Only include stack trace in development
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
     });
   }
 });
@@ -299,7 +385,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({
     success: false,
     message: 'Internal Server Error',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    error: process.env.NODE_ENV === 'production' ? undefined : err.message
   });
 });
 
@@ -365,5 +451,10 @@ mongoose.connection.on('error', (err) => {
 mongoose.connection.on('disconnected', () => {
   console.log('Mongoose disconnected');
 });
+
+// Add this validation at app startup
+if (!process.env.TELEGRAM_GROUP_ID) {
+  throw new Error('TELEGRAM_GROUP_ID must be provided');
+}
 
 module.exports = app;

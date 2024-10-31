@@ -43,6 +43,19 @@ interface ProbabilityVolume {
   cap: number
 }
 
+// Move this outside the component to prevent recreating on every render
+const generateThresholdVolumes = (thresholds: EventDetails['thresholds'], initialProbabilityVolumes: ProbabilityVolume[]) => {
+  if (!thresholds) return initialProbabilityVolumes;
+  
+  return thresholds.flatMap((threshold, index) => 
+    threshold.options.map((option, optIndex) => ({
+      probability: (index * 2 + optIndex + 1) / (thresholds.length * 2),
+      volume: 50000 + Math.random() * 50000,
+      cap: 100000 + Math.random() * 100000
+    }))
+  );
+};
+
 export default function EnhancedTradePage({
   params,
   searchParams,
@@ -75,8 +88,19 @@ export default function EnhancedTradePage({
   const [footerEmail, setFooterEmail] = useState('')
   const [selectedPosition, setSelectedPosition] = useState<'yes' | 'no'>('yes');
   const [selectedOption, setSelectedOption] = useState<'above' | 'below'>('above');
+
+  const initialProbabilityVolumes: ProbabilityVolume[] = [
+    { probability: 0.1, volume: 50000, cap: 10000 },
+    { probability: 0.3, volume: 75000, cap: 15000 },
+    { probability: 0.5, volume: 100000, cap: 20000 },
+    { probability: 0.7, volume: 15000, cap: 50000 },
+    { probability: 0.9, volume: 10000, cap: 200000 },
+  ]
+
+  const [probabilityVolumes, setProbabilityVolumes] = useState<ProbabilityVolume[]>(initialProbabilityVolumes)
+
+  // Update the useEffect that sets event details
   useEffect(() => {
-    // In a real implementation, you would fetch this data from an API
     const market = featuredMarkets.find(m => m.id === id);
     
     if (market) {
@@ -93,42 +117,17 @@ export default function EnhancedTradePage({
           value: t.value,
           options: [...t.options]
         })) : undefined
-      }
-      setEventDetails(mockEventDetails)
+      };
+      
+      setEventDetails(mockEventDetails);
       
       if (mockEventDetails.type === 'threshold' && mockEventDetails.thresholds) {
-        setSelectedThreshold(mockEventDetails.thresholds[0])
+        setSelectedThreshold(mockEventDetails.thresholds[0]);
+        // Update probability volumes here
+        setProbabilityVolumes(generateThresholdVolumes(mockEventDetails.thresholds, initialProbabilityVolumes));
       }
     }
-  }, [id])
-
-  const initialProbabilityVolumes: ProbabilityVolume[] = [
-    { probability: 0.1, volume: 50000, cap: 10000 },
-    { probability: 0.3, volume: 75000, cap: 15000 },
-    { probability: 0.5, volume: 100000, cap: 20000 },
-    { probability: 0.7, volume: 15000, cap: 50000 },
-    { probability: 0.9, volume: 10000, cap: 200000 },
-  ]
-
-  const [probabilityVolumes, setProbabilityVolumes] = useState<ProbabilityVolume[]>(initialProbabilityVolumes)
-
-  const generateThresholdVolumes = useCallback((thresholds: EventDetails['thresholds']) => {
-    if (!thresholds) return initialProbabilityVolumes;
-    
-    return thresholds.flatMap((threshold, index) => 
-      threshold.options.map((option, optIndex) => ({
-        probability: (index * 2 + optIndex + 1) / (thresholds.length * 2),
-        volume: 50000 + Math.random() * 50000,
-        cap: 100000 + Math.random() * 100000
-      }))
-    );
-  }, [initialProbabilityVolumes]);
-
-  useEffect(() => {
-    if (eventDetails.type === 'threshold' && eventDetails.thresholds) {
-      setProbabilityVolumes(generateThresholdVolumes(eventDetails.thresholds));
-    }
-  }, [eventDetails.type, eventDetails.thresholds, generateThresholdVolumes]);
+  }, [id]); // Only depend on id
 
   const calculateTimeBasedMultiplier = () => {
     const now = new Date()
@@ -480,7 +479,7 @@ export default function EnhancedTradePage({
                       </div>
                       <div className="flex justify-between items-center">
                         <span>Potential Payout:</span>
-                        <span className="font-bold">${(tradeAmount * calculatePayout() * 10).toFixed(2)}</span>
+                        <span className="font-bold">${(tradeAmount * calculatePayout() * 1).toFixed(2)}</span>
                       </div>
                     </div>
                   </form>
@@ -743,7 +742,7 @@ export default function EnhancedTradePage({
               </div>
               <div className="flex justify-between">
                 <span>Potential Payout:</span>
-                <span className="font-semibold">${(tradeAmount * calculatePayout() * 10).toFixed(2)}</span>
+                <span className="font-semibold">${(tradeAmount * calculatePayout() * 1).toFixed(2)}</span>
               </div>
             </div>
           </div>
