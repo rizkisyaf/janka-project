@@ -6,6 +6,7 @@ import WalletProviderClient from "../components/WalletProviderClient";
 import FeedbackWidget from '@/components/FeedbackWidget'
 import { criticalCSS } from '@/app/utils/criticalCSS'
 import StylesheetLoader from '@/components/StylesheetLoader'
+import { Analytics } from "@vercel/analytics/react"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -66,6 +67,7 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <WalletProviderClient>{children}</WalletProviderClient>
         <FeedbackWidget />
+        <Analytics />
       </body>
     </html>
   );
