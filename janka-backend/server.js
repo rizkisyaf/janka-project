@@ -51,7 +51,7 @@ wss.on('connection', (ws) => {
 // Middleware
 app.use(cors({
   origin: process.env.NODE_ENV === 'production'
-    ? ['https://janka-project.vercel.app']
+    ? ['https://janka.vercel.app']
     : ['http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
@@ -338,7 +338,7 @@ app.post('/api/waitlist', async (req, res) => {
         <html>
           <body style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; margin-bottom: 30px;">
-              <img src="https://janka-project.vercel.app/janka-logo.svg" alt="Janka Logo" style="width: 80px; height: 80px;">
+              <img src="https://janka.vercel.app/janka-logo.svg" alt="Janka Logo" style="width: 80px; height: 80px;">
             </div>
             
             <h1 style="color: #2563eb; text-align: center; margin-bottom: 25px;">Welcome to the Janka Journey!</h1>

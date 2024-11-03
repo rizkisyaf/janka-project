@@ -20,7 +20,7 @@ export default function CookiesPolicy() {
         <title>Janka Cookies Policy | Clear, Transparent, and Actually Digestible</title>
         <meta name="description" content="Discover Janka's Cookies Policy. We've made it clear, transparent, and actually digestible. Understand how we use cookies to enhance your experience on our revolutionary prediction market platform." />
         <meta name="keywords" content="Janka, cookies policy, user privacy, prediction markets, blockchain, transparency" />
-        <link rel="canonical" href="https://janka-project.vercel.app/legal/cookies-policy" />
+        <link rel="canonical" href="https://janka.vercel.app/legal/cookies-policy" />
       </Head>
 
       <header className="sticky top-0 z-50 w-full bg-white dark:bg-gray-800 shadow-sm">
@@ -122,7 +122,7 @@ export default function CookiesPolicy() {
                     <div className="space-y-6">
                       <div>
                         <h3 className="text-lg font-semibold mb-2">1. Introduction</h3>
-                        <p>This Cookies Policy explains how Janka (we, us, our) uses cookies and similar technologies to recognize you when you visit our website at https://janka-project.vercel.app (Website). It explains what these technologies are and why we use them, as well as your rights to control our use of them.</p>
+                        <p>This Cookies Policy explains how Janka (we, us, our) uses cookies and similar technologies to recognize you when you visit our website at https://janka.vercel.app (Website). It explains what these technologies are and why we use them, as well as your rights to control our use of them.</p>
                       </div>
                       <div>
                         <h3 className="text-lg font-semibold mb-2">2. What are cookies?</h3>

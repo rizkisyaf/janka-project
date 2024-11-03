@@ -7,6 +7,7 @@ import FeedbackWidget from '@/components/FeedbackWidget'
 import { criticalCSS } from '@/app/utils/criticalCSS'
 import StylesheetLoader from '@/components/StylesheetLoader'
 import { Analytics } from "@vercel/analytics/react"
+import Script from 'next/script'
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
     description: "Janka enables users to hedge against real-world, uninsurable events with transparency, precision, and oracle-verified data.",
     images: [
       {
-        url: "https://janka-project.vercel.app/banner.png",
+        url: "https://janka.vercel.app/banner.png",
         width: 1200,
         height: 630,
         alt: "Janka Banner",
@@ -41,13 +42,13 @@ export const metadata: Metadata = {
     siteName: "Janka",
     locale: "en_US",
     type: "website",
-    url: "https://janka-project.vercel.app",
+    url: "https://janka.vercel.app",
   },
   twitter: {
     title: "Janka - Real-World Hedging Event Platform",
     card: "summary_large_image",
     description: "Janka enables users to hedge against real-world, uninsurable events with transparency, precision, and oracle-verified data.",
-    images: ["https://janka-project.vercel.app/banner.png"],
+    images: ["https://janka.vercel.app/banner.png"],
   }
 };
 
@@ -68,6 +69,12 @@ export default function RootLayout({
         <WalletProviderClient>{children}</WalletProviderClient>
         <FeedbackWidget />
         <Analytics />
+        <Script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id="a3fa0cb2-912b-4624-9b7f-40267de34b7f"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
